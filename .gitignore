@@ -26,5 +26,8 @@ secrets.json
 .idea/
 .vscode/
 
+# Local tooling config (e.g. preview launch config)
+.claude/
+
 # Local planning artifacts (not part of the public project)
 *.docx

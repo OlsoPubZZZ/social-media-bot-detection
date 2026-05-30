@@ -146,11 +146,12 @@ function wireRows(rows) {
 
 function evidenceHtml(r) {
   const sigs = (r.signals || []).map((s) => {
-    const bits = Object.entries(s)
-      .filter(([k]) => !["name", "score", "weight", "label_hint", "reason"].includes(k))
+    const ev = s.evidence || {};
+    const bits = Object.entries(ev)
+      .filter(([k]) => k !== "reason")
       .map(([k, v]) => `${k}=${Array.isArray(v) ? v.length + " items" : escapeHtml(String(v))}`)
       .join(", ");
-    return `<li><b>${s.name}</b> (${(s.score).toFixed(2)})${bits ? " — " + bits : ""}</li>`;
+    return `<li><b>${s.name}</b> (${s.score.toFixed(2)})${bits ? " — " + bits : ""}</li>`;
   }).join("");
   return `<div class="narr">${escapeHtml(r.narration || "")}</div><ul>${sigs}</ul>`;
 }
