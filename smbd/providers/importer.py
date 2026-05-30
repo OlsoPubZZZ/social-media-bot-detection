@@ -155,6 +155,63 @@ def _meta_followers(data: Any) -> List[Follower]:
     return followers
 
 
+def _is_meta_comments(data: Any) -> bool:
+    if isinstance(data, dict):
+        if "comments_v2" in data:  # Facebook
+            return True
+        return any(isinstance(data.get(k), list) for k in
+                   ("comments_media_comments", "post_comments_1", "post_comments"))
+    if isinstance(data, list) and data and isinstance(data[0], dict):  # Instagram (bare list)
+        return "Comment" in (data[0].get("string_map_data") or {})
+    return False
+
+
+def _meta_comments(data: Any) -> List[Comment]:
+    """Parse the comment section of a Facebook/Instagram export.
+
+    These are the comments *you authored* (the export owner) — Meta does not
+    include other people's comments on your posts — so every comment shares one
+    author. Useful for reviewing your own activity, not for finding bots on your
+    posts (use the official API adapter for that).
+    """
+    out: List[Comment] = []
+    # Facebook: comments_v2 -> data[].comment.{comment, author}
+    if isinstance(data, dict) and "comments_v2" in data:
+        for i, entry in enumerate(data["comments_v2"]):
+            text = author = None
+            for d in (entry.get("data") or []):
+                c = d.get("comment") or {}
+                text = c.get("comment") or text
+                author = c.get("author") or author
+            if not text:
+                continue
+            account = Account(id=str(author or "you"), display_name=author or "you")
+            out.append(Comment(id=f"c_{i}", account=account, text=text,
+                               created_at=_parse_dt(entry.get("timestamp"))))
+        return out
+
+    # Instagram: string_map_data -> {"Comment": {value, timestamp}, "Media Owner": {value}}
+    entries: Any = data
+    if isinstance(data, dict):
+        for key in ("comments_media_comments", "post_comments_1", "post_comments"):
+            if isinstance(data.get(key), list):
+                entries = data[key]
+                break
+    for i, entry in enumerate(entries or []):
+        if not isinstance(entry, dict):
+            continue
+        smd = entry.get("string_map_data") or {}
+        comment = smd.get("Comment") or {}
+        text = comment.get("value")
+        if not text:
+            continue
+        owner = (smd.get("Media Owner") or {}).get("value")
+        out.append(Comment(id=f"c_{i}", account=Account(id="you", display_name="you"),
+                           text=text, created_at=_parse_dt(comment.get("timestamp")),
+                           post_id=owner or None))
+    return out
+
+
 class ImportProvider(Provider):
     """Load normalized comments from files or in-memory rows."""
 
@@ -174,6 +231,8 @@ class ImportProvider(Provider):
 
     def from_json(self, content: str) -> List[Comment]:
         data = json.loads(content)
+        if _is_meta_comments(data):
+            return _meta_comments(data)  # Facebook/Instagram export (your own comments)
         if isinstance(data, dict):
             data = data.get("comments", [])
         return self.from_rows(data)

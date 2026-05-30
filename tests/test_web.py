@@ -90,6 +90,21 @@ def test_youtube_without_key_is_400():
     assert "api key" in r.json()["detail"].lower()
 
 
+def test_instagram_source_without_token_is_400():
+    r = client.post("/api/analyze", json={
+        "kind": "comments", "source": "instagram", "target": "1784...",
+    })
+    assert r.status_code == 400
+    assert "access token" in r.json()["detail"].lower()
+
+
+def test_meta_comment_export_via_web():
+    payload = '{"comments_media_comments": [{"string_map_data": {"Comment": {"value": "hey there friend", "timestamp": 1716949201}}}]}'
+    r = client.post("/api/analyze", json={"kind": "comments", "source": "import", "data": payload})
+    assert r.status_code == 200
+    assert r.json()["report"]["total_comments"] == 1
+
+
 def test_json_input_accepted():
     payload = '{"comments": [{"text": "nice", "handle": "a"}, {"text": "great", "handle": "b"}]}'
     r = client.post("/api/analyze", json={"kind": "comments", "source": "import", "data": payload, "fmt": "json"})

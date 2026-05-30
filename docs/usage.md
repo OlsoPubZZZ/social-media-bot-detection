@@ -44,6 +44,24 @@ Top flagged comments:
 **Flags:** `--json`, `--config`, `--provider`, `--api-key`, `--enrich-authors`,
 and the LLM flags (below).
 
+### Comments on *your own* post
+
+To find bots in the comments on a post you own, pull them from the official API
+(this returns the commenters' handles, so the engine can flag them):
+
+```bash
+smbd comments <video_id> --provider youtube      # your YouTube video
+smbd comments <tweet_id> --provider x            # your tweet
+# Instagram (a post on your business/creator account) — from Python:
+#   InstagramProvider(access_token="...").fetch_comments("<your media id>")
+```
+
+In the web app, the Comments tab's "Pull from YouTube / X / Instagram" options do
+the same thing. **Note:** your Facebook/Instagram *data export* won't help here —
+its "comments" are the ones **you wrote**, not the comments others left on your
+posts (Meta doesn't include those). You can still import the export's comments,
+but they'll all be yours.
+
 ## `smbd followers`
 
 Scores each follower's account and reports a quality score (0–100), a

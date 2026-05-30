@@ -84,6 +84,12 @@ def _load_comments(req: AnalyzeRequest):
         if not (req.target or "").strip():
             raise ValueError("Enter a tweet id.")
         comments = XProvider(bearer_token=keys.get("x") or None).fetch_comments(req.target.strip())
+    elif req.source == "instagram":
+        from smbd.providers.instagram import InstagramProvider
+
+        if not (req.target or "").strip():
+            raise ValueError("Enter the media id of your own Instagram post.")
+        comments = InstagramProvider(access_token=keys.get("instagram") or None).fetch_comments(req.target.strip())
     else:
         raise ValueError(f"Unknown source {req.source!r}.")
     if not comments:

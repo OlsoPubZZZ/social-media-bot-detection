@@ -12,7 +12,11 @@ All notable changes to SMBD are documented here. The format is based on
   Information" JSON straight into the Followers tab — it auto-detects the format
   and maps handles + follow timestamps (so bought-follower bursts surface). The
   legitimate way to analyze your own network; SMBD does not scrape login-walled
-  follower lists.
+  follower lists. Comment exports (`comments_media_comments` / `comments_v2`)
+  are also auto-detected — though those are the comments *you wrote*.
+- **Comments on your own post**: added **Instagram** to the web Comments tab's
+  data sources (alongside YouTube and X), and documented the official-API path
+  for analyzing comments on a post you own.
 - **Plain-language web UI** for non-technical users: "We checked N comments/
   followers", a friendly donut of *real people vs fake/bot/spam*, everyday
   reasons instead of signal names, and an optional **AI explanation** card.

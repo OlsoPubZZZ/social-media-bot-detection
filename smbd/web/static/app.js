@@ -21,22 +21,27 @@ function refreshUI() {
   $("#target-input").classList.toggle("hidden", isImport);
   $("#enrich").closest("label").classList.toggle("hidden", !(source === "youtube" && kind === "comments"));
 
-  // Followers can't come from YouTube.
-  const ytOpt = $("#source").querySelector('option[value="youtube"]');
-  ytOpt.disabled = kind === "followers";
-  if (ytOpt.disabled && source === "youtube") { $("#source").value = "import"; return refreshUI(); }
+  // YouTube/Instagram comment sources don't apply to the Followers tab.
+  for (const v of ["youtube", "instagram"]) {
+    const opt = $("#source").querySelector(`option[value="${v}"]`);
+    opt.disabled = kind === "followers";
+    if (opt.disabled && source === v) { $("#source").value = "import"; return refreshUI(); }
+  }
 
   const noun = kind === "comments" ? "comments" : "followers";
   $("#paste-label").textContent =
     `Paste the ${noun} here (a spreadsheet/CSV export works great)`;
   $("#format-hint").innerHTML = kind === "comments"
-    ? "Tip: export a post's comments to a CSV and paste or upload it. A <code>text</code> column is all you need to start."
+    ? "Tip: paste/upload a CSV with a <code>text</code> column — or drop in the comment JSON " +
+      "from your <b>Instagram / Facebook export</b> (note: those are the comments <b>you</b> wrote)."
     : "Tip: paste/upload a CSV with a <code>handle</code> column — or drop in your " +
       "<b>Instagram / Facebook “Download Your Information”</b> JSON (followers or friends) directly.";
   if (!isImport) {
     $("#target-label").textContent = source === "youtube"
       ? "YouTube video link or ID"
-      : (kind === "comments" ? "Tweet link or ID" : "X account / user ID");
+      : source === "instagram"
+        ? "Your Instagram post's media ID"
+        : (kind === "comments" ? "Tweet link or ID" : "X account / user ID");
   }
 }
 
@@ -64,6 +69,7 @@ $("#run").addEventListener("click", async () => {
   const keys = {};
   if (source === "youtube") keys.youtube = $("#provider-key").value.trim();
   if (source === "x") keys.x = $("#provider-key").value.trim();
+  if (source === "instagram") keys.instagram = $("#provider-key").value.trim();
   if ($("#use-llm").checked) keys.anthropic = $("#anthropic-key").value.trim();
 
   const body = {
