@@ -1,15 +1,13 @@
 # SMBD — Social Media Bot Detection Tool
 
 Analyze social media engagement — comments, followers, amplification — and find
-out how much is **genuine** vs. **fake / bot / coordinated**, with
-human-readable **evidence for every flag**.
+out how much is **genuine** vs. **fake / bot / coordinated**, with **evidence for every flag**.
 
-The detection engine is **platform-agnostic** and runs with **no credentials
-and no AI key**. You feed it data (a CSV/JSON export, an API pull, pasted rows)
+The detection engine is **platform-agnostic** and runs with **no credentials**. You feed it data (a CSV/JSON export, an API pull, pasted rows)
 and it returns scored, explained results. An optional AI key adds richer
 language analysis and natural-language explanations.
 
-> ⚠️ Detection is **probabilistic**. SMBD reports *signals* and *confidence*, not
+> Detection is **probabilistic**. SMBD reports *signals* and *confidence*, not
 > verdicts. Treat outputs as evidence to review, never as proof that a specific
 > person is a bot.
 
