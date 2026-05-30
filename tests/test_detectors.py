@@ -81,6 +81,19 @@ def test_coordination_reports_cohesion(bot_ring):
     assert 0.0 <= sig.evidence["cohesion"] <= 1.0
 
 
+def test_coordination_reports_subcommunities_for_large_groups():
+    # A group at/above community_min_size gets community detection run on it.
+    from smbd.schema import Account, Comment
+
+    text = "buy followers here cheap promo link www.x.link"
+    comments = [
+        Comment(id=f"c{i}", account=Account(id=f"u{i}", handle=f"a{i}"), text=text)
+        for i in range(7)  # >= community_min_size (6)
+    ]
+    sig = _all_signals(CoordinationDetector(DEFAULT_CONFIG).analyze(comments))[0]
+    assert sig.evidence["subcommunity_count"] >= 1
+
+
 def test_account_weakness_flags_new_generated_profiles(bot_ring):
     produced = AccountWeaknessDetector(DEFAULT_CONFIG).analyze(bot_ring)
     assert len(produced) == len(bot_ring)

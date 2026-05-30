@@ -71,13 +71,18 @@ def _build_llm(args, config: Config) -> Optional[LLMClient]:
 
 def _provider(args):
     """Build the ingestion provider named by --provider (default: file import)."""
-    if getattr(args, "provider", "import") == "youtube":
+    name = getattr(args, "provider", "import")
+    if name == "youtube":
         from smbd.providers.youtube import YouTubeProvider
 
         return YouTubeProvider(
             api_key=getattr(args, "api_key", None),
             enrich_authors=getattr(args, "enrich_authors", False),
         )
+    if name == "x":
+        from smbd.providers.x import XProvider
+
+        return XProvider(bearer_token=getattr(args, "api_key", None))
     return ImportProvider()
 
 
@@ -166,9 +171,14 @@ def cmd_comments(args) -> int:
 
 def cmd_followers(args) -> int:
     cfg = _config(args)
-    followers = ImportProvider().fetch_followers(args.data)
+    provider = _provider(args)
+    try:
+        followers = provider.fetch_followers(args.data)
+    except (RuntimeError, NotImplementedError) as exc:
+        _err(str(exc))
+        return 2
     if not followers:
-        _err(f"No followers found in {args.data!r} (need at least one account row).")
+        _err(f"No followers found for {args.data!r}.")
         return 2
     batch = analyze_followers(followers, config=cfg)
     rep = followers_report(batch)
@@ -278,11 +288,14 @@ def _add_common(sp: argparse.ArgumentParser) -> None:
     sp.add_argument("--config", help="JSON config overriding detection weights/thresholds")
     sp.add_argument(
         "--provider",
-        choices=["import", "youtube"],
+        choices=["import", "youtube", "x"],
         default="import",
-        help="data source (default: import from file). 'youtube' treats the argument as a video id.",
+        help="data source (default: import from file). 'youtube' -> video id; 'x' -> tweet id.",
     )
-    sp.add_argument("--api-key", help="API key for online providers (or set YOUTUBE_API_KEY)")
+    sp.add_argument(
+        "--api-key",
+        help="API key / bearer token for online providers (or set YOUTUBE_API_KEY / X_BEARER_TOKEN)",
+    )
     sp.add_argument(
         "--enrich-authors",
         action="store_true",
@@ -308,9 +321,16 @@ def build_parser() -> argparse.ArgumentParser:
     c.set_defaults(func=cmd_comments)
 
     fo = sub.add_parser("followers", help="follower quality score + fake-likely estimate")
-    fo.add_argument("data", help="CSV or JSON file of follower account rows")
+    fo.add_argument("data", help="follower CSV/JSON file, or a user id with --provider x")
     fo.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     fo.add_argument("--config", help="JSON config overriding detection weights/thresholds")
+    fo.add_argument(
+        "--provider",
+        choices=["import", "x"],
+        default="import",
+        help="follower source (default: import from file). 'x' treats the argument as a user id.",
+    )
+    fo.add_argument("--api-key", help="bearer token for X (or set X_BEARER_TOKEN)")
     fo.set_defaults(func=cmd_followers)
 
     pg = sub.add_parser("page", help="page-level amplification + authenticity report")

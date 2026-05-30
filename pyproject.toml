@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "smbd"
-version = "0.1.0"
+version = "0.5.0"
 description = "Social Media Bot Detection Tool — analyze comments, followers, and amplification for fake/bot/coordinated activity, with evidence."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -16,15 +16,17 @@ dependencies = []
 [project.optional-dependencies]
 cli = ["rich>=13.0"]
 llm = ["anthropic>=0.39"]
-instagram = ["requests>=2.31"]
-dev = ["pytest>=7.0", "rich>=13.0"]
+# Optional graph-library backend for modularity-based community detection;
+# without it, communities fall back to connected components (stdlib).
+graph = ["networkx>=3"]
+dev = ["pytest>=7.0", "rich>=13.0", "networkx>=3"]
 
 [project.scripts]
 smbd = "smbd.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/your-org/smbd"
-Issues = "https://github.com/your-org/smbd/issues"
+Homepage = "https://github.com/OlsoPubZZZ/social-media-bot-detection"
+Issues = "https://github.com/OlsoPubZZZ/social-media-bot-detection/issues"
 
 [tool.setuptools.packages.find]
 include = ["smbd*"]

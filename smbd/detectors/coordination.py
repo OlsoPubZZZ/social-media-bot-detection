@@ -20,6 +20,7 @@ from __future__ import annotations
 from itertools import combinations
 from typing import Dict, List
 
+from smbd.community import detect_communities
 from smbd.detectors.base import Detector
 from smbd.features.temporal import detect_bursts
 from smbd.features.text import cluster_near_duplicates, extract_urls
@@ -117,21 +118,32 @@ class CoordinationDetector(Detector):
             # Denser cliques score a little higher than loose chains.
             score = min(1.0, 0.5 + 0.04 * len(members) + 0.2 * cohesion)
             member_set = set(members)
+            # For large groups, split the component into communities (distinct
+            # sub-rings). networkx ([graph] extra) can split a connected group;
+            # the stdlib fallback reports one community per connected component.
+            subcommunity_count = None
+            if len(members) >= self.config.community_min_size:
+                intra_edges = [
+                    (m, other)
+                    for m in members
+                    for other, _r in uf.edges[m]
+                    if other in member_set
+                ]
+                subcommunity_count = len(detect_communities(intra_edges)) or 1
             for c in comments:
                 if c.account.id in member_set:
                     reasons = sorted({r for _, r in uf.edges[c.account.id]})
+                    evidence = {
+                        "reason": "coordinated_behavior_cluster",
+                        "group_size": len(members),
+                        "link_types": reasons,
+                        "cohesion": cohesion,
+                        "group_account_ids": members[:25],
+                    }
+                    if subcommunity_count is not None:
+                        evidence["subcommunity_count"] = subcommunity_count
                     out.setdefault(c.id, []).append(
-                        self.signal(
-                            score=score,
-                            evidence={
-                                "reason": "coordinated_behavior_cluster",
-                                "group_size": len(members),
-                                "link_types": reasons,
-                                "cohesion": cohesion,
-                                "group_account_ids": members[:25],
-                            },
-                            label_hint=Label.COORDINATED,
-                        )
+                        self.signal(score=score, evidence=evidence, label_hint=Label.COORDINATED)
                     )
         return out
 

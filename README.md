@@ -138,6 +138,31 @@ account-age and profile-weakness detectors fire on YouTube data.
 > identities (only the authorized user's own subscriptions, with consent), so
 > follower-quality analysis again relies on imported data.
 
+## Analyzing X (Twitter)
+
+X's API is **paid** and rate-limited, but it is the **only** platform whose API
+returns a real **follower list with profiles** — so it's the one source that can
+feed the follower engine officially. Set a bearer token, then:
+
+```bash
+export X_BEARER_TOKEN=AAAA...
+smbd comments  <tweet_id> --provider x       # replies in a conversation
+smbd followers <user_id>  --provider x       # follower quality on official data
+smbd page      <user_id>  --provider x       # account metadata
+```
+
+> X's followers endpoint gives **no "followed at" timestamp**, so the join-burst
+> detector abstains on X follower data — profile-weakness and follow-ratio
+> signals still fire.
+
+## Community detection (optional)
+
+Large coordinated groups can contain several distinct rings bridged together.
+With the optional `[graph]` extra installed (`pip install -e ".[graph]"`), the
+coordination detector splits big groups into communities via networkx modularity
+and reports a `subcommunity_count`. Without it, communities fall back to
+connected components (stdlib) — the core stays dependency-free.
+
 ## Optional: LLM enrichment
 
 Install the extra and set a key, then add `--llm` to any command:
@@ -163,7 +188,7 @@ The engine runs fully without any of this.
 - [x] **M2** — optional LLM enrichment (ambiguous-text judgments, richer `explain`)
 - [x] **M3** — follower analysis engine + Instagram Graph adapter (comments/page metadata)
 - [x] **M4** — YouTube adapter (comments on any public video, optional author enrichment) + richer coordination graph (shared-URL edges, cohesion)
-- [ ] **M5** — X adapter; graph-library community detection (optional `[graph]` extra)
+- [x] **M5** — X adapter (comments + official follower list + page) + optional `[graph]` community detection
 - [ ] **M6** — optional scraper extra + web UI
 
 ### A note on Instagram

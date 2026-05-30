@@ -48,6 +48,9 @@ class Config:
 
     # --- coordination ---
     coordination_min_group: int = 3
+    # Only run (more expensive) community detection on groups at least this big;
+    # smaller groups are reported as a single community.
+    community_min_size: int = 6
 
     # --- follower analysis ---
     # Mass-follow / purchased-follower bursts happen over minutes-to-hours, not
