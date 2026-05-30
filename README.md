@@ -82,6 +82,20 @@ weak; the author follows far more accounts than follow it back."
 → Full walkthrough: **[docs/usage.md](docs/usage.md)** · Reading the output:
 **[docs/output-reference.md](docs/output-reference.md)**
 
+## Web UI
+
+Prefer clicking to typing? There's a local web app — the "plug in your key and
+go" experience over the same engine:
+
+```bash
+pip install -e ".[cli,web]"
+smbd serve                      # → http://127.0.0.1:8000
+```
+
+Paste/upload data or pull from YouTube/X, see the breakdown and scores, and click
+any flagged row for its evidence. It's **local and bring-your-own-key** — keys are
+sent per request and never stored. Details: **[docs/web.md](docs/web.md)**.
+
 ## Platforms at a glance
 
 | Source | Comments | Followers | What you need |
@@ -119,10 +133,12 @@ thresholds are tunable in [`smbd/config.py`](smbd/config.py) — see
 | --- | --- |
 | [Installation](docs/installation.md) | Python versions, extras matrix, troubleshooting |
 | [Usage guide](docs/usage.md) | Every command, flags, input formats, examples |
+| [Web UI](docs/web.md) | Running the local `smbd serve` app |
 | [Providers & API keys](docs/providers.md) | YouTube / X / Instagram setup, limits, gotchas |
 | [Output reference](docs/output-reference.md) | Labels, scores, confidence, every JSON field |
 | [Configuration](docs/configuration.md) | Tuning weights and thresholds |
 | [Library API](docs/library.md) | Using SMBD from Python |
+| [Extending](docs/extending.md) | External providers + the scraper plugin interface |
 | [FAQ & responsible use](docs/faq.md) | Accuracy, false positives, legality, limits |
 | [Contributing](CONTRIBUTING.md) | Add a detector or a data source |
 | [Security policy](SECURITY.md) | Reporting vulnerabilities, secrets handling |
@@ -133,6 +149,8 @@ thresholds are tunable in [`smbd/config.py`](smbd/config.py) — see
 
 - [x] **M1–M5** — core engine, comments/followers/amplification/authenticity,
   LLM enrichment, Instagram + YouTube + X adapters, community detection
+- [x] **M6** — local web UI (`smbd serve`) + a documented scraper [plugin
+  interface](docs/extending.md) (SMBD ships no scraper)
 
 ## Responsible use
 

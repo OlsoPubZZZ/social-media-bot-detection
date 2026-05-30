@@ -7,8 +7,17 @@ All notable changes to SMBD are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
-- Full documentation set under `docs/` (installation, usage, providers, output
-  reference, configuration, library API, FAQ) and a launch-ready README.
+- **Local web UI** (`smbd serve`, the `web` extra): a FastAPI app + dependency-free
+  HTML/JS frontend over the engine. Bring-your-own-key, local-first — keys are
+  sent per request and never stored. Comments / followers / page tabs, with
+  click-to-expand evidence. See `docs/web.md`.
+- **Provider plugin interface** (`smbd.providers.registry`): load external
+  providers via an `smbd.providers` entry point or a `package.module:Class`
+  path (`--provider`). This is the **scraper plugin interface** — SMBD ships no
+  scraper; see `docs/extending.md`.
+- Full documentation set under `docs/` (installation, usage, web, providers,
+  output reference, configuration, library API, extending, FAQ), CHANGELOG,
+  SECURITY, CODE_OF_CONDUCT, issue/PR templates, and a CI workflow.
 
 ## [0.5.0] — 2026-05-30
 

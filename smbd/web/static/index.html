@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SMBD — Social Media Bot Detection</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>SMBD</h1>
+    <p class="tag">Find out how much of a page's engagement is real — with evidence for every flag.</p>
+  </header>
+
+  <main>
+    <section class="panel" id="controls">
+      <div class="row tabs" id="kind-tabs" role="tablist">
+        <button class="tab active" data-kind="comments">Comments</button>
+        <button class="tab" data-kind="followers">Followers</button>
+        <button class="tab" data-kind="page">Page</button>
+      </div>
+
+      <label class="field">
+        <span>Data source</span>
+        <select id="source">
+          <option value="import">Import (paste / upload CSV or JSON)</option>
+          <option value="youtube">YouTube (video id)</option>
+          <option value="x">X / Twitter (tweet or user id)</option>
+        </select>
+      </label>
+
+      <div id="import-input">
+        <label class="field">
+          <span>Paste CSV or JSON</span>
+          <textarea id="data" rows="8" placeholder="text,handle,account_created_at,followers_count,following_count,has_avatar&#10;&quot;love this!&quot;,realjane,2018-04-01,820,310,true"></textarea>
+        </label>
+        <label class="field inline">
+          <span>…or upload a file</span>
+          <input type="file" id="file" accept=".csv,.json,.txt" />
+        </label>
+      </div>
+
+      <div id="target-input" class="hidden">
+        <label class="field">
+          <span id="target-label">Video id</span>
+          <input type="text" id="target" placeholder="dQw4w9WgXcQ" />
+        </label>
+        <label class="field">
+          <span>Provider API key <em>(stays in your browser; sent per request, never stored)</em></span>
+          <input type="password" id="provider-key" placeholder="YOUTUBE_API_KEY / X bearer token" />
+        </label>
+        <label class="check"><input type="checkbox" id="enrich" /> Fetch commenter channel age &amp; subscriber counts (YouTube)</label>
+      </div>
+
+      <details class="ai">
+        <summary>AI enrichment (optional)</summary>
+        <label class="check"><input type="checkbox" id="use-llm" /> Use an AI model to judge ambiguous comments</label>
+        <label class="field">
+          <span>Anthropic API key <em>(never stored)</em></span>
+          <input type="password" id="anthropic-key" placeholder="sk-ant-..." />
+        </label>
+        <label class="field">
+          <span>Model</span>
+          <input type="text" id="model" value="claude-opus-4-8" />
+        </label>
+      </details>
+
+      <button id="run" class="primary">Analyze</button>
+      <p class="note">Runs locally. Detection is probabilistic — results are signals with confidence, not verdicts.</p>
+    </section>
+
+    <section class="panel" id="results" aria-live="polite">
+      <p class="placeholder">Results will appear here.</p>
+    </section>
+  </main>
+
+  <footer>
+    <span>SMBD · open-source · Apache-2.0</span>
+    <a href="https://github.com/OlsoPubZZZ/social-media-bot-detection">GitHub</a>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

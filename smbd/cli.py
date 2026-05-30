@@ -4,6 +4,7 @@
     smbd followers <data.csv|json> [--json]      # follower quality + fake-likely
     smbd page      <data.csv|json> [--json]      # amplification + authenticity
     smbd explain   <data.csv|json> <comment_id>  # why a comment was flagged
+    smbd serve                                   # local web UI (needs the 'web' extra)
 
 Renders rich tables when the ``rich`` extra is installed, plain text otherwise.
 Runs with no credentials and no AI key.
@@ -83,7 +84,21 @@ def _provider(args):
         from smbd.providers.x import XProvider
 
         return XProvider(bearer_token=getattr(args, "api_key", None))
-    return ImportProvider()
+    if name == "import":
+        return ImportProvider()
+    # Anything else: an installed plugin (entry point) or a dotted path.
+    from smbd.providers.registry import load_provider
+
+    return load_provider(name, api_key=getattr(args, "api_key", None))
+
+
+def _build_provider(args):
+    """Construct the provider, exiting cleanly on a bad name / missing plugin."""
+    try:
+        return _provider(args)
+    except (ValueError, ImportError) as exc:
+        _err(str(exc))
+        sys.exit(2)
 
 
 def _load(target: str, config: Config, llm: Optional[LLMClient] = None, provider=None) -> BatchResult:
@@ -160,7 +175,7 @@ def _print_flagged(batch: BatchResult, limit: int = 10) -> None:
 
 def cmd_comments(args) -> int:
     cfg = _config(args)
-    batch = _load(args.data, cfg, _build_llm(args, cfg), _provider(args))
+    batch = _load(args.data, cfg, _build_llm(args, cfg), _build_provider(args))
     if args.json:
         _print_json({**comments_report(batch), "results": [r.to_dict() for r in batch.results]})
     else:
@@ -171,7 +186,7 @@ def cmd_comments(args) -> int:
 
 def cmd_followers(args) -> int:
     cfg = _config(args)
-    provider = _provider(args)
+    provider = _build_provider(args)
     try:
         followers = provider.fetch_followers(args.data)
     except (RuntimeError, NotImplementedError) as exc:
@@ -249,7 +264,7 @@ def _print_followers(rep: dict) -> None:
 
 def cmd_page(args) -> int:
     cfg = _config(args)
-    batch = _load(args.data, cfg, _build_llm(args, cfg), _provider(args))
+    batch = _load(args.data, cfg, _build_llm(args, cfg), _build_provider(args))
     amp = amplification_report(batch)
     auth = authenticity_report(batch)
     if args.json:
@@ -275,7 +290,7 @@ def cmd_page(args) -> int:
 def cmd_explain(args) -> int:
     cfg = _config(args)
     llm = _build_llm(args, cfg)
-    batch = _load(args.data, cfg, llm, _provider(args))
+    batch = _load(args.data, cfg, llm, _build_provider(args))
     match = next((r for r in batch.results if r.comment.id == args.comment_id), None)
     if match is None:
         _err(f"comment id {args.comment_id!r} not found")
@@ -284,13 +299,27 @@ def cmd_explain(args) -> int:
     return 0
 
 
+def cmd_serve(args) -> int:
+    try:
+        import uvicorn
+
+        from smbd.web.app import app
+    except ImportError:
+        _err('The web UI needs the \'web\' extra: pip install -e ".[web]"')
+        return 2
+    print(f"SMBD web UI → http://{args.host}:{args.port}  (Ctrl-C to stop)")
+    uvicorn.run(app, host=args.host, port=args.port, log_level="warning")
+    return 0
+
+
 def _add_common(sp: argparse.ArgumentParser) -> None:
     sp.add_argument("--config", help="JSON config overriding detection weights/thresholds")
     sp.add_argument(
         "--provider",
-        choices=["import", "youtube", "x"],
         default="import",
-        help="data source (default: import from file). 'youtube' -> video id; 'x' -> tweet id.",
+        metavar="SOURCE",
+        help="data source: import (default), youtube, x, or an installed plugin name / "
+        "'package.module:Class' path. 'youtube' -> video id; 'x' -> tweet id.",
     )
     sp.add_argument(
         "--api-key",
@@ -326,11 +355,12 @@ def build_parser() -> argparse.ArgumentParser:
     fo.add_argument("--config", help="JSON config overriding detection weights/thresholds")
     fo.add_argument(
         "--provider",
-        choices=["import", "x"],
         default="import",
-        help="follower source (default: import from file). 'x' treats the argument as a user id.",
+        metavar="SOURCE",
+        help="follower source: import (default), x (user id), or an installed plugin / "
+        "'package.module:Class' path.",
     )
-    fo.add_argument("--api-key", help="bearer token for X (or set X_BEARER_TOKEN)")
+    fo.add_argument("--api-key", help="bearer token / API key for online or plugin sources")
     fo.set_defaults(func=cmd_followers)
 
     pg = sub.add_parser("page", help="page-level amplification + authenticity report")
@@ -344,6 +374,11 @@ def build_parser() -> argparse.ArgumentParser:
     e.add_argument("comment_id", help="id of the comment to explain")
     _add_common(e)
     e.set_defaults(func=cmd_explain)
+
+    sv = sub.add_parser("serve", help="launch the local web UI (needs the 'web' extra)")
+    sv.add_argument("--host", default="127.0.0.1", help="bind address (default 127.0.0.1)")
+    sv.add_argument("--port", type=int, default=8000, help="port (default 8000)")
+    sv.set_defaults(func=cmd_serve)
 
     return p
 

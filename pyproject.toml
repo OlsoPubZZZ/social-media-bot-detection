@@ -19,7 +19,9 @@ llm = ["anthropic>=0.39"]
 # Optional graph-library backend for modularity-based community detection;
 # without it, communities fall back to connected components (stdlib).
 graph = ["networkx>=3"]
-dev = ["pytest>=7.0", "rich>=13.0", "networkx>=3"]
+# Local web app (`smbd serve`). BYO-key, runs on your machine.
+web = ["fastapi>=0.110", "uvicorn>=0.27"]
+dev = ["pytest>=7.0", "rich>=13.0", "networkx>=3", "fastapi>=0.110", "uvicorn>=0.27", "httpx>=0.27"]
 
 [project.scripts]
 smbd = "smbd.cli:main"
@@ -30,6 +32,9 @@ Issues = "https://github.com/OlsoPubZZZ/social-media-bot-detection/issues"
 
 [tool.setuptools.packages.find]
 include = ["smbd*"]
+
+[tool.setuptools.package-data]
+"smbd.web" = ["static/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

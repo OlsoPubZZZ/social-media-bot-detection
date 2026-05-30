@@ -139,10 +139,13 @@ data you have and use the import provider.
 
 A scraper would unlock follower/comment data for arbitrary third-party pages, but
 scraping **violates most platforms' terms of service**, is fragile, and risks IP
-or account bans. It is **not** part of SMBD today. It is planned only as a
-clearly-marked, **opt-in** extra (roadmap M6) so the default install stays within
-platform rules. Use official adapters and imports for anything you publish or rely
-on.
+or account bans. **SMBD ships no scraper.**
+
+Instead it exposes a **plugin interface**: a separate, opt-in package can register
+its own `Provider` and be used via `--provider <name>` or
+`--provider package.module:Class`, without that code living in this repo. If you
+choose to build one, you do so at your own risk and responsibility. See
+**[extending.md](extending.md)** for the contract and the full warnings.
 
 ---
 
