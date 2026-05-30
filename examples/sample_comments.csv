@@ -1,0 +1,16 @@
+comment_id,text,created_at,likes,account_id,handle,display_name,account_created_at,followers_count,following_count,post_count,bio,has_avatar,is_verified
+c1,"Loved this post, the lighting is gorgeous!",2026-05-28T09:14:00,4,a1,maria_lens,Maria,2019-03-02T00:00:00,820,310,540,"photographer & cat mom",true,false
+c2,"Been following you for years, congrats on the milestone 🎉",2026-05-28T11:42:00,7,a2,deric.k,Deric,2017-08-19T00:00:00,1500,640,1200,"runner. coffee.",true,false
+c3,"Where was this taken? Looks amazing",2026-05-28T13:05:00,2,a3,sunny.travels,Priya,2020-11-05T00:00:00,2300,900,410,"travel diaries",true,false
+c4,"This helped me so much, thank you for sharing the details",2026-05-28T15:20:00,3,a4,quietreader,Tom,2016-01-10T00:00:00,140,180,90,"books and tea",true,false
+c5,"Honestly not sure I agree but interesting take",2026-05-28T18:01:00,1,a5,opinion_havr,Lena,2018-06-22T00:00:00,560,420,300,,true,false
+c6,"Check out my page for free followers and likes!! www.freefollowers.link",2026-05-29T03:00:01,0,b1,user_889213,user889213,2026-05-20T00:00:00,3,1900,0,,false,false
+c7,"Check out my page for free followers and likes!! www.freefollowers.link",2026-05-29T03:00:04,0,b2,grow_fast_77421,grow77421,2026-05-21T00:00:00,5,2400,0,,false,false
+c8,"Check out my page for free followers and likes! www.freefollowers.link",2026-05-29T03:00:06,0,b3,promo_king_55012,promo55012,2026-05-19T00:00:00,2,3100,0,,false,false
+c9,"check out my page for free followers and likes!! www.freefollowers.link",2026-05-29T03:00:09,0,b4,real_deals_30188,deals30188,2026-05-22T00:00:00,8,2750,1,,false,false
+c10,"Check out my page for FREE followers and likes www.freefollowers.link",2026-05-29T03:00:12,0,b5,fast_grow_91002,fastgrow,2026-05-23T00:00:00,1,2200,0,,false,false
+c11,"DM me to grow your account fast 💯💯 link in bio",2026-05-29T03:00:15,0,b6,boost_now_44521,boost44521,2026-05-24T00:00:00,4,2600,0,,false,false
+c12,"DM me to grow your account fast 💯💯 link in bio",2026-05-29T03:00:18,0,b7,boost_pro_88210,boostpro,2026-05-24T00:00:00,6,2900,0,,false,false
+c13,"DM me to grow your account fast link in bio",2026-05-29T03:00:21,0,b8,gainz_72330,gainz72330,2026-05-25T00:00:00,2,3300,0,,false,false
+c14,"Great content as always, keep it up!",2026-05-29T08:30:00,5,a6,kev_makes,Kevin,2015-04-18T00:00:00,940,520,760,"maker / diy",true,false
+c15,"first time commenting but i had to say this is beautiful",2026-05-29T10:11:00,2,a7,nadia.writes,Nadia,2021-02-27T00:00:00,310,290,150,"words & wine",true,false

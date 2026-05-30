@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Secrets / local config — never commit API keys
+.env
+*.local.json
+secrets.json
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Local planning artifacts (not part of the public project)
+*.docx
