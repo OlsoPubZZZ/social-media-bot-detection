@@ -111,26 +111,56 @@ def _load_followers(req: AnalyzeRequest):
 
 # --- analysis -------------------------------------------------------------------
 
+_AI_SYSTEM = (
+    "You explain social-media authenticity results to a NON-technical person in "
+    "plain, friendly language. No jargon, no bullet points, no markdown. 2-3 short "
+    "sentences: say what the numbers mean and whether the engagement looks trustworthy."
+)
+
+
+def _ai_summary(prompt: str, llm) -> str:
+    try:
+        return llm.complete(prompt, system=_AI_SYSTEM).strip()
+    except Exception as exc:  # never let the AI step break the core result
+        return f"(AI explanation unavailable: {exc})"
+
+
 def _run(req: AnalyzeRequest) -> Dict[str, Any]:
     cfg = Config()
     opts = req.options or {}
     if opts.get("llm_model"):
         cfg.llm_model = str(opts["llm_model"])
 
-    if req.kind == "followers":
-        batch = analyze_followers(_load_followers(req), cfg)
-        return {"kind": "followers", "report": followers_report(batch)}
-
-    comments = _load_comments(req)
-    batch = analyze_comments(comments, cfg)
-
+    # Build the LLM once (used for enrichment and/or the plain-English summary).
+    llm = None
     if opts.get("llm"):
         key = req.keys.get("anthropic")
         if not key:
-            raise ValueError("AI enrichment is on — paste your Anthropic API key, or turn it off.")
-        from smbd.llm import enrich_batch, get_anthropic
+            raise ValueError("AI explanation is on — paste your Anthropic API key, or turn it off.")
+        from smbd.llm import get_anthropic
 
         llm = get_anthropic(model=cfg.llm_model, api_key=key, max_tokens=cfg.llm_max_tokens)
+
+    if req.kind == "followers":
+        batch = analyze_followers(_load_followers(req), cfg)
+        rep = followers_report(batch)
+        out: Dict[str, Any] = {"kind": "followers", "report": rep}
+        if llm is not None:
+            b, total = rep["breakdown_pct"], rep["total_followers"]
+            out["ai_summary"] = _ai_summary(
+                f"We checked {total} followers of an account. About "
+                f"{b['genuine']:.0f}% look like real people and {rep['likely_fake_pct']:.0f}% "
+                f"look fake or low-quality. Coordinated 'bought-follower' bursts found: "
+                f"{len(rep['suspicious_clusters'])}.",
+                llm,
+            )
+        return out
+
+    comments = _load_comments(req)
+    batch = analyze_comments(comments, cfg)
+    if llm is not None:
+        from smbd.llm import enrich_batch
+
         enrich_batch(batch, llm, cfg)
 
     if req.kind == "page":
@@ -140,18 +170,31 @@ def _run(req: AnalyzeRequest) -> Dict[str, Any]:
             "authenticity": authenticity_report(batch),
         }
 
+    rep = comments_report(batch)
+    amp = amplification_report(batch)
     results: List[Dict[str, Any]] = []
     for r in batch.results:
         d = r.to_dict()
         d["narration"] = _narrate(r)
         results.append(d)
-    return {
+    out = {
         "kind": "comments",
-        "report": comments_report(batch),
+        "report": rep,
         "authenticity": authenticity_report(batch),
-        "amplification": amplification_report(batch),
+        "amplification": amp,
         "results": results,
     }
+    if llm is not None:
+        b = rep["breakdown_pct"]
+        fake = b["suspicious"] + b["spam"] + b["coordinated"]
+        out["ai_summary"] = _ai_summary(
+            f"We checked {rep['total_comments']} comments on a post. About "
+            f"{b['genuine']:.0f}% look like real people and {fake:.0f}% look like "
+            f"spam, bots, or coordinated activity. Coordinated bot groups found: "
+            f"{len(amp['coordinated_groups'])}.",
+            llm,
+        )
+    return out
 
 
 def create_app() -> FastAPI:

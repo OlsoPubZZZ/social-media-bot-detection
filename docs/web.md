@@ -15,15 +15,23 @@ Open the printed URL in your browser.
 
 ## What it does
 
-- **Three tabs** — Comments, Followers, Page — mirroring the CLI commands.
+The UI is written in **plain language for non-technical users** — no jargon.
+
+- **Two things to check** — *Comments on a post* or *Followers of an account*.
 - **Data sources** — paste/upload a CSV or JSON, or pull from **YouTube**
   (video id) or **X** (tweet/user id).
-- **Results** — the genuine/suspicious/spam/coordinated breakdown, an
-  authenticity or follower-quality score, amplification warnings and join-burst
-  clusters, and a flagged table. **Click any flagged row** to expand its
-  evidence and plain-English explanation.
-- **Optional AI enrichment** — tick the box and paste an Anthropic key to send
-  ambiguous comments to a model for a second opinion.
+- **Results** — "We checked N comments/followers," a friendly **donut** of
+  **Real people vs Fake / bot / spam** (with counts and %), a one-line verdict,
+  a plain-English warning if there's a coordinated bot campaign or bought-follower
+  burst, and a "what looks suspicious" list with everyday reasons
+  ("Brand-new account (only 9 days old)", "Follows 1,900 but only 3 follow back").
+- **Optional AI explanation** — tick the box and paste an Anthropic key to get a
+  short, plain-English written summary of the results (and a second opinion on
+  borderline comments).
+
+> Under the hood it's the same engine as the CLI — the labels are just mapped to
+> plain buckets (genuine → *real people*; suspicious/spam/coordinated → *fake /
+> bot / spam*; low-confidence → *not sure*).
 
 ## Keys & privacy
 

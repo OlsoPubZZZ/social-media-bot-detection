@@ -3,79 +3,83 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SMBD — Social Media Bot Detection</title>
+  <title>SMBD — Are these comments & followers real?</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
   <header>
-    <h1>SMBD</h1>
-    <p class="tag">Find out how much of a page's engagement is real — with evidence for every flag.</p>
+    <h1>Real or Fake?</h1>
+    <p class="tag">Check how many of an account's <b>comments</b> or <b>followers</b> are
+      real people — and how many look like fake or bot accounts. No tech skills needed.</p>
   </header>
 
   <main>
     <section class="panel" id="controls">
+      <p class="step">1 · What do you want to check?</p>
       <div class="row tabs" id="kind-tabs" role="tablist">
-        <button class="tab active" data-kind="comments">Comments</button>
-        <button class="tab" data-kind="followers">Followers</button>
-        <button class="tab" data-kind="page">Page</button>
+        <button class="tab active" data-kind="comments">💬 Comments on a post</button>
+        <button class="tab" data-kind="followers">👥 Followers of an account</button>
       </div>
 
+      <p class="step">2 · Where's the data from?</p>
       <label class="field">
-        <span>Data source</span>
         <select id="source">
-          <option value="import">Import (paste / upload CSV or JSON)</option>
-          <option value="youtube">YouTube (video id)</option>
-          <option value="x">X / Twitter (tweet or user id)</option>
+          <option value="import">I'll paste it or upload a file</option>
+          <option value="youtube">Pull from YouTube (needs a free key)</option>
+          <option value="x">Pull from X / Twitter (needs a key)</option>
         </select>
       </label>
 
       <div id="import-input">
         <label class="field">
-          <span>Paste CSV or JSON</span>
-          <textarea id="data" rows="8" placeholder="text,handle,account_created_at,followers_count,following_count,has_avatar&#10;&quot;love this!&quot;,realjane,2018-04-01,820,310,true"></textarea>
+          <span id="paste-label">Paste the comments here (a spreadsheet/CSV export works great)</span>
+          <textarea id="data" rows="7" placeholder="Paste rows here, or upload a file below…"></textarea>
         </label>
         <label class="field inline">
           <span>…or upload a file</span>
           <input type="file" id="file" accept=".csv,.json,.txt" />
         </label>
+        <p class="hint" id="format-hint">Tip: export an account's comments/followers to a CSV
+          (most tools can) and paste or upload it. A <code>text</code> column is all you need to start.</p>
       </div>
 
       <div id="target-input" class="hidden">
         <label class="field">
-          <span id="target-label">Video id</span>
-          <input type="text" id="target" placeholder="dQw4w9WgXcQ" />
+          <span id="target-label">Video link or ID</span>
+          <input type="text" id="target" placeholder="e.g. dQw4w9WgXcQ" />
         </label>
         <label class="field">
-          <span>Provider API key <em>(stays in your browser; sent per request, never stored)</em></span>
-          <input type="password" id="provider-key" placeholder="YOUTUBE_API_KEY / X bearer token" />
+          <span>Your access key <em>(stays in your browser — never saved)</em></span>
+          <input type="password" id="provider-key" placeholder="paste your key" />
         </label>
-        <label class="check"><input type="checkbox" id="enrich" /> Fetch commenter channel age &amp; subscriber counts (YouTube)</label>
+        <label class="check"><input type="checkbox" id="enrich" /> Also look up each commenter's account age &amp; size (YouTube)</label>
       </div>
 
       <details class="ai">
-        <summary>AI enrichment (optional)</summary>
-        <label class="check"><input type="checkbox" id="use-llm" /> Use an AI model to judge ambiguous comments</label>
+        <summary>✨ Add an AI explanation (optional)</summary>
+        <p class="hint">Get a short, plain-English summary written by AI. Needs your own
+          Anthropic key — it's used once and never saved.</p>
+        <label class="check"><input type="checkbox" id="use-llm" /> Yes, add an AI explanation</label>
         <label class="field">
-          <span>Anthropic API key <em>(never stored)</em></span>
-          <input type="password" id="anthropic-key" placeholder="sk-ant-..." />
+          <span>Anthropic API key</span>
+          <input type="password" id="anthropic-key" placeholder="sk-ant-…" />
         </label>
-        <label class="field">
-          <span>Model</span>
-          <input type="text" id="model" value="claude-opus-4-8" />
-        </label>
+        <input type="hidden" id="model" value="claude-opus-4-8" />
       </details>
 
-      <button id="run" class="primary">Analyze</button>
-      <p class="note">Runs locally. Detection is probabilistic — results are signals with confidence, not verdicts.</p>
+      <button id="run" class="primary">Check now →</button>
+      <p class="note">Runs on your computer. This is an estimate based on signals — a helpful
+        guide, not a final verdict about any person.</p>
     </section>
 
     <section class="panel" id="results" aria-live="polite">
-      <p class="placeholder">Results will appear here.</p>
+      <p class="placeholder">👈 Pick what to check, add your data, and hit <b>Check now</b>.
+        Your results will appear here.</p>
     </section>
   </main>
 
   <footer>
-    <span>SMBD · open-source · Apache-2.0</span>
+    <span>SMBD · free &amp; open-source</span>
     <a href="https://github.com/OlsoPubZZZ/social-media-bot-detection">GitHub</a>
   </footer>
 
