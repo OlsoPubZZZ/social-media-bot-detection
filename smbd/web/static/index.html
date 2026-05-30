@@ -17,18 +17,21 @@
     <section class="panel" id="controls">
       <p class="step">1 · What do you want to check?</p>
       <div class="row tabs" id="kind-tabs" role="tablist">
-        <button class="tab active" data-kind="comments">💬 Comments on a post</button>
-        <button class="tab" data-kind="followers">👥 Followers of an account</button>
+        <button class="tab active" data-kind="comments">💬 Comments</button>
+        <button class="tab" data-kind="followers">👥 Followers</button>
+        <button class="tab" data-kind="browser">🌐 Browse a page</button>
       </div>
 
-      <p class="step">2 · Where's the data from?</p>
-      <label class="field">
-        <select id="source">
-          <option value="import">I'll paste it or upload a file</option>
-          <option value="youtube">Pull from YouTube (needs a free key)</option>
-          <option value="x">Pull from X / Twitter (needs a key)</option>
-        </select>
-      </label>
+      <div id="source-block">
+        <p class="step">2 · Where's the data from?</p>
+        <label class="field">
+          <select id="source">
+            <option value="import">I'll paste it or upload a file</option>
+            <option value="youtube">Pull from YouTube (needs a free key)</option>
+            <option value="x">Pull from X / Twitter (needs a key)</option>
+          </select>
+        </label>
+      </div>
 
       <div id="import-input">
         <label class="field">
@@ -53,6 +56,17 @@
           <input type="password" id="provider-key" placeholder="paste your key" />
         </label>
         <label class="check"><input type="checkbox" id="enrich" /> Also look up each commenter's account age &amp; size (YouTube)</label>
+      </div>
+
+      <div id="browser-input" class="hidden">
+        <div class="warnbox">⚠ <b>Experimental.</b> This opens a <b>public</b> page in a
+          browser and reads what's visible — it does <b>not</b> log in. Only use it on pages
+          you're allowed to view, and respect each site's terms. Adding an AI key (below) gives
+          much better results.</div>
+        <label class="field">
+          <span>Page address (URL)</span>
+          <input type="text" id="browser-url" placeholder="https://example.com/post" />
+        </label>
       </div>
 
       <details class="ai">

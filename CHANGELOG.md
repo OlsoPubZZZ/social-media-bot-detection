@@ -7,6 +7,16 @@ All notable changes to SMBD are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **Plain-language web UI** for non-technical users: "We checked N comments/
+  followers", a friendly donut of *real people vs fake/bot/spam*, everyday
+  reasons instead of signal names, and an optional **AI explanation** card.
+- **"Browse a page" workflow** (experimental, opt-in `browser` extra): a
+  headless-browser (Playwright) reader that renders a **public** page, extracts
+  the visible text (AI-assisted when a key is provided), and runs it through the
+  engine — shown with a screenshot of what was read. It does **not** log in,
+  store credentials, bypass access controls, or scrape platform-specific data.
+  Plus `BrowserProvider` in `smbd.providers.browser`.
+
 - **Local web UI** (`smbd serve`, the `web` extra): a FastAPI app + dependency-free
   HTML/JS frontend over the engine. Bring-your-own-key, local-first — keys are
   sent per request and never stored. Comments / followers / page tabs, with

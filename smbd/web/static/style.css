@@ -76,6 +76,15 @@ textarea { resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, m
 .sus-text { color: var(--muted); margin: 6px 0; font-size: 13.5px; }
 .reasons { margin: 6px 0 0; padding-left: 18px; }
 .reasons li { margin: 2px 0; font-size: 13.5px; }
+.warnbox { background: rgba(210,153,34,.1); border: 1px solid var(--warn); color: #f0c674;
+  padding: 10px 12px; border-radius: 10px; font-size: 13px; margin: 6px 0 12px; }
+.capture-card { display: flex; gap: 14px; align-items: center; border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px; margin-bottom: 14px; background: #0d1016; }
+.capture-card img { width: 160px; height: 100px; object-fit: cover; object-position: top;
+  border-radius: 8px; border: 1px solid var(--line); flex-shrink: 0; }
+.cap-title { font-weight: 700; }
+.cap-meta { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+.cap-meta a { color: var(--accent); }
 .error { color: var(--fake); font-size: 15px; }
 .spin { color: var(--muted); }
 footer { display: flex; justify-content: space-between; padding: 16px 24px; color: var(--muted);

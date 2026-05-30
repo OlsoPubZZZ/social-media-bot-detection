@@ -43,6 +43,26 @@ The app is **bring-your-own-key and local-first**:
 - Don't expose it to the public internet with real keys in the browser. If you
   must bind to `0.0.0.0`, put it behind your own auth/proxy.
 
+## Browse a page (experimental, opt-in)
+
+The third tab, **🌐 Browse a page**, opens a **public** web page in a headless
+browser (Playwright), reads what a logged-out visitor would see, and runs the
+visible text through the engine. With an AI key it extracts real comments from
+the page; without one it falls back to a simple line-by-line read.
+
+```bash
+pip install -e ".[web,browser]"
+python -m playwright install chromium    # one-time browser download
+smbd serve
+```
+
+> ⚠ **Experimental, and use responsibly.** It does **not** log in, store
+> credentials, bypass access controls, or use any platform-specific scraping.
+> It only sees public, logged-out content. Automated browsing can violate a
+> site's Terms of Service — only point it at pages you're authorized to view,
+> prefer your own content, and respect each site's terms. You are responsible
+> for how you use it. See [extending.md](extending.md) for the line we hold.
+
 ## How it's built
 
 A thin [FastAPI](https://fastapi.tiangolo.com/) app

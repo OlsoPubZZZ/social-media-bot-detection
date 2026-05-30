@@ -38,8 +38,9 @@ pip install -e ".[cli]"      # the engine + pretty CLI tables
 ```
 
 The core has **zero runtime dependencies**. Optional extras add features:
-`llm` (AI enrichment), `graph` (community detection), `dev` (tests). Full matrix
-in **[docs/installation.md](docs/installation.md)**.
+`llm` (AI enrichment), `graph` (community detection), `web` (the local app),
+`browser` (the experimental page reader), `dev` (tests). Full matrix in
+**[docs/installation.md](docs/installation.md)**.
 
 ## 60-second quickstart (no keys needed)
 
@@ -92,9 +93,12 @@ pip install -e ".[cli,web]"
 smbd serve                      # → http://127.0.0.1:8000
 ```
 
-Paste/upload data or pull from YouTube/X, see the breakdown and scores, and click
-any flagged row for its evidence. It's **local and bring-your-own-key** — keys are
-sent per request and never stored. Details: **[docs/web.md](docs/web.md)**.
+Paste/upload data or pull from YouTube/X, see a plain-English breakdown (real vs
+fake/bot), and read everyday reasons for each flag. It's **local and
+bring-your-own-key** — keys are sent per request and never stored. There's also
+an experimental **"Browse a page"** tab (opt-in `browser` extra) that reads a
+**public** page in a headless browser — no login, respect each site's terms.
+Details: **[docs/web.md](docs/web.md)**.
 
 ## Platforms at a glance
 

@@ -21,6 +21,9 @@ llm = ["anthropic>=0.39"]
 graph = ["networkx>=3"]
 # Local web app (`smbd serve`). BYO-key, runs on your machine.
 web = ["fastapi>=0.110", "uvicorn>=0.27"]
+# Opt-in, experimental headless-browser reader for PUBLIC pages (the "Browser"
+# workflow). Also run: python -m playwright install chromium
+browser = ["playwright>=1.40"]
 dev = ["pytest>=7.0", "rich>=13.0", "networkx>=3", "fastapi>=0.110", "uvicorn>=0.27", "httpx>=0.27"]
 
 [project.scripts]

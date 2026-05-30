@@ -6,6 +6,15 @@ let kind = "comments";
 // ---------- form behavior ----------
 
 function refreshUI() {
+  const isBrowser = kind === "browser";
+  $("#source-block").classList.toggle("hidden", isBrowser);
+  $("#browser-input").classList.toggle("hidden", !isBrowser);
+  if (isBrowser) {
+    $("#import-input").classList.add("hidden");
+    $("#target-input").classList.add("hidden");
+    return;
+  }
+
   const source = $("#source").value;
   const isImport = source === "import";
   $("#import-input").classList.toggle("hidden", !isImport);
@@ -57,9 +66,10 @@ $("#run").addEventListener("click", async () => {
   if ($("#use-llm").checked) keys.anthropic = $("#anthropic-key").value.trim();
 
   const body = {
-    kind, source,
+    kind,
+    source: kind === "browser" ? "browser" : source,
     data: $("#data").value,
-    target: $("#target").value,
+    target: kind === "browser" ? $("#browser-url").value.trim() : $("#target").value,
     keys,
     options: {
       llm: $("#use-llm").checked,
@@ -138,12 +148,23 @@ function bucket(label) {
   return "fake";
 }
 
+function captureCard(cap) {
+  return `<div class="capture-card">
+    <img src="data:image/png;base64,${cap.screenshot_b64}" alt="page screenshot" />
+    <div><div class="cap-title">${escapeHtml(cap.title || cap.url)}</div>
+    <div class="cap-meta">Read ${cap.extracted} item(s) from
+      <a href="${encodeURI(cap.url)}" target="_blank" rel="noopener">this page</a> · experimental</div></div>
+  </div>`;
+}
+
 function renderComments(data) {
   const rep = data.report, amp = data.amplification;
   const c = counts(rep.breakdown_pct, rep.total_comments);
-  let html = `<p class="checked">We checked <b>${rep.total_comments}</b> comments.</p>`;
+  const noun = data.capture ? "items found on the page" : "comments";
+  let html = data.capture ? captureCard(data.capture) : "";
+  html += `<p class="checked">We checked <b>${rep.total_comments}</b> ${noun}.</p>`;
   html += `<div class="result-top">${donut(c)}${legend(c)}</div>`;
-  html += verdict(c, "comments");
+  html += verdict(c, data.capture ? "items" : "comments");
   if (amp && amp.amplification_detected && amp.coordinated_groups.length) {
     const g = amp.coordinated_groups[0];
     html += `<div class="callout">⚠ Signs of a coordinated bot campaign: a group of

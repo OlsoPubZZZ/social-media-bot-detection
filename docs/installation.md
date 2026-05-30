@@ -33,7 +33,11 @@ Install only what you need — the core stays dependency-free.
 | `cli` | `pip install -e ".[cli]"` | `rich` — pretty colour tables | nicer CLI output |
 | `llm` | `pip install -e ".[llm]"` | `anthropic` SDK | `--llm` AI enrichment |
 | `graph` | `pip install -e ".[graph]"` | `networkx` | modularity community detection |
-| `dev` | `pip install -e ".[dev]"` | `pytest`, `rich`, `networkx` | running the test suite |
+| `web` | `pip install -e ".[web]"` | `fastapi`, `uvicorn` | the local web app (`smbd serve`) |
+| `browser` | `pip install -e ".[browser]"` | `playwright` | the experimental "Browse a page" reader¹ |
+| `dev` | `pip install -e ".[dev]"` | `pytest`, `rich`, `networkx`, `fastapi`, … | running the test suite |
+
+¹ The browser reader also needs a one-time browser download: `python -m playwright install chromium`.
 
 Combine them with commas:
 

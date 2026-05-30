@@ -125,6 +125,38 @@ def _ai_summary(prompt: str, llm) -> str:
         return f"(AI explanation unavailable: {exc})"
 
 
+def _browse(req: AnalyzeRequest, llm):
+    """Render a public page in a headless browser and extract comments from it."""
+    url = (req.target or "").strip()
+    if not url:
+        raise ValueError("Enter the full address (URL) of the page to check.")
+    from smbd.providers.browser import BrowserProvider
+
+    bp = BrowserProvider()
+    try:
+        cap = bp.capture(url)
+    except ImportError as exc:
+        raise ValueError(str(exc))
+    except ValueError:
+        raise
+    except Exception as exc:  # Playwright timeout/navigation errors → friendly message
+        raise ValueError(f"Couldn't open that page: {exc}")
+    comments = (
+        BrowserProvider.ai_comments(cap["text"], llm)
+        if llm is not None
+        else BrowserProvider.comments_from_text(cap["text"])
+    )
+    if not comments:
+        raise ValueError("Couldn't find readable comments on that page.")
+    capture = {
+        "title": cap["title"],
+        "url": cap["url"],
+        "screenshot_b64": cap["screenshot_b64"],
+        "extracted": len(comments),
+    }
+    return comments, capture
+
+
 def _run(req: AnalyzeRequest) -> Dict[str, Any]:
     cfg = Config()
     opts = req.options or {}
@@ -156,7 +188,11 @@ def _run(req: AnalyzeRequest) -> Dict[str, Any]:
             )
         return out
 
-    comments = _load_comments(req)
+    capture = None
+    if req.kind == "browser":
+        comments, capture = _browse(req, llm)
+    else:
+        comments = _load_comments(req)
     batch = analyze_comments(comments, cfg)
     if llm is not None:
         from smbd.llm import enrich_batch
@@ -184,6 +220,8 @@ def _run(req: AnalyzeRequest) -> Dict[str, Any]:
         "amplification": amp,
         "results": results,
     }
+    if capture is not None:
+        out["capture"] = capture
     if llm is not None:
         b = rep["breakdown_pct"]
         fake = b["suspicious"] + b["spam"] + b["coordinated"]
