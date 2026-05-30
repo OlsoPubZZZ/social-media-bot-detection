@@ -33,6 +33,33 @@ Column/key reference and parsing rules: **[usage.md → Input formats](usage.md#
 From Python: `ImportProvider().fetch_comments(path)` /
 `.fetch_followers(path)` — see [library.md](library.md).
 
+### Your own Facebook / Instagram data (the official export)
+
+You can't get a **third party's** follower list from Meta — not via API, and not
+even for a Page you manage (Facebook and Instagram only expose follower *counts*
+and aggregate demographics, never the individual list). The one follower/friend
+list Meta will give you is **your own**, via *Settings → Download Your
+Information* (Instagram and Facebook both offer this; choose **JSON**).
+
+SMBD reads those export files directly — just paste/upload the JSON into the
+Followers tab or pass it to `fetch_followers`:
+
+- **Instagram** — `followers_1.json` / `following.json` (gives each handle + the
+  **timestamp you were followed**, so coordinated "bought-follower" bursts show up).
+- **Facebook** — `friends.json` (`friends_v2`) / `followers.json` (`followers_v2`)
+  (gives each name + the date).
+
+```bash
+smbd followers ~/instagram_export/followers_1.json
+```
+
+> **What the export does and doesn't give you:** handles/names + follow dates —
+> enough for **handle-pattern** and **coordinated join-burst** signals. It does
+> **not** include each follower's account age, avatar, or follower count, so the
+> per-account profile signals don't fire on export data. That deeper data isn't
+> available from Meta without scraping (which SMBD does not do). X is the only
+> platform whose API returns full follower profiles — see below.
+
 ---
 
 ## YouTube

@@ -31,7 +31,8 @@ function refreshUI() {
     `Paste the ${noun} here (a spreadsheet/CSV export works great)`;
   $("#format-hint").innerHTML = kind === "comments"
     ? "Tip: export a post's comments to a CSV and paste or upload it. A <code>text</code> column is all you need to start."
-    : "Tip: export an account's followers to a CSV and paste or upload it. A <code>handle</code> column is all you need to start.";
+    : "Tip: paste/upload a CSV with a <code>handle</code> column — or drop in your " +
+      "<b>Instagram / Facebook “Download Your Information”</b> JSON (followers or friends) directly.";
   if (!isImport) {
     $("#target-label").textContent = source === "youtube"
       ? "YouTube video link or ID"

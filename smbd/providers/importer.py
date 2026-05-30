@@ -100,6 +100,61 @@ def _row_to_follower(row: Dict[str, Any], index: int) -> Follower:
     )
 
 
+# --- Meta ("Download Your Information") export support --------------------------
+# Instagram exports followers/following as objects with a string_list_data entry
+# ({value: username, timestamp}); Facebook exports friends/followers as
+# {name, timestamp}. These are *your own* data, handed to you by the platform.
+
+_META_KEYS = (
+    "relationships_followers",
+    "relationships_following",
+    "friends_v2",
+    "followers_v2",
+    "following_v2",
+)
+
+
+def _is_meta_export(data: Any) -> bool:
+    if isinstance(data, dict):
+        return any(k in data for k in _META_KEYS)
+    if isinstance(data, list) and data:
+        return isinstance(data[0], dict) and "string_list_data" in data[0]
+    return False
+
+
+def _meta_followers(data: Any) -> List[Follower]:
+    entries: Any = None
+    kind = "ig"
+    if isinstance(data, dict):
+        for key in ("relationships_followers", "relationships_following"):
+            if key in data:
+                entries, kind = data[key], "ig"
+                break
+        if entries is None:
+            for key in ("friends_v2", "followers_v2", "following_v2"):
+                if key in data:
+                    entries, kind = data[key], "fb"
+                    break
+    elif isinstance(data, list):
+        entries, kind = data, "ig"  # IG sometimes exports a bare list
+
+    followers: List[Follower] = []
+    for i, entry in enumerate(entries or []):
+        if not isinstance(entry, dict):
+            continue
+        if kind == "ig":
+            sld = (entry.get("string_list_data") or [{}])[0]
+            username = sld.get("value")
+            ts = sld.get("timestamp")
+            account = Account(id=str(username or f"f_{i}"), handle=username or None)
+        else:  # facebook
+            name = entry.get("name")
+            ts = entry.get("timestamp")
+            account = Account(id=str(name or f"f_{i}"), display_name=name or None)
+        followers.append(Follower(account=account, followed_at=_parse_dt(ts)))
+    return followers
+
+
 class ImportProvider(Provider):
     """Load normalized comments from files or in-memory rows."""
 
@@ -152,6 +207,8 @@ class ImportProvider(Provider):
 
     def followers_from_json(self, content: str) -> List[Follower]:
         data = json.loads(content)
+        if _is_meta_export(data):
+            return _meta_followers(data)  # Facebook/Instagram export file
         if isinstance(data, dict):
             data = data.get("followers", [])
         return self.followers_from_rows(data)

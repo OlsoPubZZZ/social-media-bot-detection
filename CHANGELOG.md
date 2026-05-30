@@ -7,6 +7,12 @@ All notable changes to SMBD are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **Meta data-export import**: drop your Instagram (`followers_1.json` /
+  `following.json`) or Facebook (`friends_v2` / `followers_v2`) "Download Your
+  Information" JSON straight into the Followers tab — it auto-detects the format
+  and maps handles + follow timestamps (so bought-follower bursts surface). The
+  legitimate way to analyze your own network; SMBD does not scrape login-walled
+  follower lists.
 - **Plain-language web UI** for non-technical users: "We checked N comments/
   followers", a friendly donut of *real people vs fake/bot/spam*, everyday
   reasons instead of signal names, and an optional **AI explanation** card.
