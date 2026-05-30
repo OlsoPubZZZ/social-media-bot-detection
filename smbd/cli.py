@@ -1,6 +1,7 @@
 """SMBD command-line interface.
 
     smbd comments  <data.csv|json> [--json] [--config cfg.json]
+    smbd followers <data.csv|json> [--json]      # follower quality + fake-likely
     smbd page      <data.csv|json> [--json]      # amplification + authenticity
     smbd explain   <data.csv|json> <comment_id>  # why a comment was flagged
 
@@ -16,6 +17,7 @@ import sys
 from typing import List, Optional
 
 from smbd.config import Config
+from smbd.followers import FollowerBatchResult, analyze_followers
 from smbd.llm import enrich_batch, get_anthropic
 from smbd.llm.base import LLMClient
 from smbd.providers.importer import ImportProvider
@@ -24,6 +26,7 @@ from smbd.report import (
     authenticity_report,
     comments_report,
     explain,
+    followers_report,
 )
 from smbd.scoring import BatchResult, analyze_comments
 
@@ -144,6 +147,79 @@ def cmd_comments(args) -> int:
     return 0
 
 
+def cmd_followers(args) -> int:
+    cfg = _config(args)
+    followers = ImportProvider().fetch_followers(args.data)
+    if not followers:
+        _err(f"No followers found in {args.data!r} (need at least one account row).")
+        return 2
+    batch = analyze_followers(followers, config=cfg)
+    rep = followers_report(batch)
+    if args.json:
+        _print_json(rep)
+        return 0
+    _print_followers(rep)
+    return 0
+
+
+def _print_followers(rep: dict) -> None:
+    bd = rep["breakdown_pct"]
+    clusters = rep["suspicious_clusters"]
+    if _RICH:
+        table = Table(title="Are these followers real people?", show_edge=True)
+        table.add_column("Label")
+        table.add_column("Share", justify="right")
+        for label, pct in bd.items():
+            color = _LABEL_COLOR.get(label, "white")
+            table.add_row(f"[{color}]{label}[/{color}]", f"{pct:.1f}%")
+        _console.print(table)
+        _console.print(
+            f"[bold]Follower quality:[/bold] {rep['follower_quality_score']}/100 "
+            f"(confidence: {rep['confidence_band']})  |  "
+            f"likely-fake: [red]{rep['likely_fake_pct']:.1f}%[/red] "
+            f"({rep['likely_fake_count']}/{rep['total_followers']})"
+        )
+        if clusters:
+            _console.print(
+                f"⚠ {len(clusters)} coordinated join-burst cluster(s): "
+                + ", ".join(f"{c['size']} accounts @ {c['window_start']}" for c in clusters[:5])
+            )
+        if rep["top_suspicious"]:
+            t2 = Table(title=f"Most suspicious followers (showing {len(rep['top_suspicious'])})")
+            t2.add_column("Score", justify="right")
+            t2.add_column("Label")
+            t2.add_column("Handle")
+            t2.add_column("Created")
+            t2.add_column("Avatar")
+            t2.add_column("Reasons", overflow="fold")
+            for f in rep["top_suspicious"]:
+                color = _LABEL_COLOR.get(f["label"], "white")
+                created = (f["account_created_at"] or "?")[:10]
+                avatar = "no" if f["has_avatar"] is False else ("yes" if f["has_avatar"] else "?")
+                t2.add_row(
+                    f"{f['score']:.2f}",
+                    f"[{color}]{f['label']}[/{color}]",
+                    f["handle"] or f["account_id"],
+                    created,
+                    avatar,
+                    ", ".join(f["reasons"]),
+                )
+            _console.print(t2)
+        _console.print(rep["summary"])
+    else:
+        print("Are these followers real people?")
+        for label, pct in bd.items():
+            print(f"  {label:<16} {pct:>5.1f}%")
+        print(
+            f"Follower quality: {rep['follower_quality_score']}/100 "
+            f"(confidence: {rep['confidence_band']}); likely-fake "
+            f"{rep['likely_fake_pct']:.1f}% ({rep['likely_fake_count']}/{rep['total_followers']})"
+        )
+        for c in clusters[:5]:
+            print(f"  cluster: {c['size']} accounts joined @ {c['window_start']}")
+        print(rep["summary"])
+
+
 def cmd_page(args) -> int:
     cfg = _config(args)
     batch = _load(args.data, cfg, _build_llm(args, cfg))
@@ -201,6 +277,12 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     _add_common(c)
     c.set_defaults(func=cmd_comments)
+
+    fo = sub.add_parser("followers", help="follower quality score + fake-likely estimate")
+    fo.add_argument("data", help="CSV or JSON file of follower account rows")
+    fo.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    fo.add_argument("--config", help="JSON config overriding detection weights/thresholds")
+    fo.set_defaults(func=cmd_followers)
 
     pg = sub.add_parser("page", help="page-level amplification + authenticity report")
     pg.add_argument("data", help="CSV or JSON file of comments")

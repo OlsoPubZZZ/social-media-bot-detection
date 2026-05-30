@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from typing import Dict, List, Optional
 
+from smbd.followers import FollowerBatchResult
 from smbd.llm.base import LLMClient, NullLLM
 from smbd.schema import Label, Signal
 from smbd.scoring import BatchResult, CommentResult
@@ -36,6 +37,65 @@ def _comments_summary(batch: BatchResult) -> str:
         f"{genuine:.0f}% of comments look genuine; {flagged:.0f}% show signs of "
         f"spam, coordination, or suspicious authorship; "
         f"{b[Label.LOW_CONFIDENCE.value]:.0f}% lacked enough data to judge."
+    )
+
+
+# --- "Are these followers real people?" -----------------------------------------
+
+def followers_report(batch: FollowerBatchResult, top_n: int = 10) -> Dict:
+    """Follower quality score, suspicious clusters, and a fake-likely estimate."""
+    fake = batch.likely_fake()
+    worst = sorted(
+        (r for r in batch.results if r.signals),
+        key=lambda r: -r.score,
+    )[:top_n]
+    top_suspicious = []
+    for r in worst:
+        acct = r.follower.account
+        reasons = sorted({s.evidence.get("reason", s.name) for s in r.signals})
+        top_suspicious.append(
+            {
+                "handle": acct.handle,
+                "account_id": acct.id,
+                "label": r.label.value,
+                "score": round(r.score, 2),
+                "account_created_at": acct.created_at.isoformat() if acct.created_at else None,
+                "followers_count": acct.followers_count,
+                "has_avatar": acct.has_avatar,
+                "reasons": reasons,
+            }
+        )
+    return {
+        "question": "Are these followers real people?",
+        "total_followers": len(batch.results),
+        "follower_quality_score": batch.quality_score(),  # 0-100
+        "confidence_band": batch.confidence_band(),
+        "likely_fake_count": fake["count"],
+        "likely_fake_pct": fake["pct"],
+        "breakdown_pct": batch.breakdown(),
+        "suspicious_clusters": batch.suspicious_clusters(),
+        "top_suspicious": top_suspicious,
+        "summary": _followers_summary(batch),
+    }
+
+
+def _followers_summary(batch: FollowerBatchResult) -> str:
+    quality = batch.quality_score()
+    fake = batch.likely_fake()
+    clusters = batch.suspicious_clusters()
+    cluster_note = (
+        f" {len(clusters)} coordinated join-burst cluster(s) detected."
+        if clusters
+        else ""
+    )
+    if quality is None:
+        return "No followers to analyze."
+    return (
+        f"Follower quality {quality:.0f}/100. About {fake['pct']:.0f}% of followers look "
+        f"likely-fake or low-quality (new accounts, missing avatars, abnormal follow "
+        f"ratios, or coordinated joins).{cluster_note} Note: this analysis needs "
+        f"per-follower profile data, which Instagram's official API does not provide — "
+        f"it runs on imported or scraped follower data."
     )
 
 

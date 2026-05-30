@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Dict, List
 
 from smbd.detectors.base import Detector
-from smbd.features.account import follow_ratio
+from smbd.features.account import ratio_suspicion
 from smbd.schema import Comment, Label, Signal
 
 
@@ -20,24 +20,11 @@ class RatioAnomalyDetector(Detector):
     def analyze(self, comments: List[Comment]) -> Dict[str, List[Signal]]:
         out: Dict[str, List[Signal]] = {}
         for c in comments:
-            ratio = follow_ratio(c.account)
-            if ratio is None:
+            result = ratio_suspicion(c.account, self.config)
+            if result is None:
                 continue  # abstain
-            if ratio < self.config.extreme_follow_ratio:
-                continue
-            # Scale: at the threshold -> ~0.4; saturates well above it.
-            score = min(1.0, 0.4 + 0.1 * (ratio / self.config.extreme_follow_ratio))
+            score, evidence = result
             out.setdefault(c.id, []).append(
-                self.signal(
-                    score=score,
-                    evidence={
-                        "reason": "abnormal_follow_ratio",
-                        "following": c.account.following_count,
-                        "followers": c.account.followers_count,
-                        "ratio": round(ratio, 1),
-                        "threshold": self.config.extreme_follow_ratio,
-                    },
-                    label_hint=Label.SUSPICIOUS,
-                )
+                self.signal(score=score, evidence=evidence, label_hint=Label.SUSPICIOUS)
             )
         return out

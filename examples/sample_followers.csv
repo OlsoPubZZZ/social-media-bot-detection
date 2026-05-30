@@ -1,0 +1,16 @@
+account_id,handle,account_created_at,followers_count,following_count,post_count,bio,has_avatar,is_verified,followed_at
+f1,realmariah,2018-03-04,480,300,120,Coffee + film photography,true,false,2024-03-12T09:14:00
+f2,david_kt,2019-06-21,1200,800,340,Dad. Cyclist. Lapsed guitarist.,true,false,2024-07-01T18:02:00
+f3,the.foodie.jen,2017-11-30,3300,600,800,Eating my way through the city,true,false,2025-01-20T12:40:00
+f4,marco_travels,2020-01-15,250,400,95,38 countries and counting,true,false,2025-05-15T07:25:00
+f5,lena_studio,2018-09-09,890,500,210,Ceramics studio | commissions open,true,false,2025-09-09T15:11:00
+f6,samgreen,2019-02-18,540,600,60,just here for the memes,true,false,2026-01-03T20:30:00
+f7,priya.reads,2017-05-27,2100,700,430,books / tea / long walks,true,false,2026-04-22T11:05:00
+b1,user8830192,2026-05-20,3,3200,0,,false,false,2026-05-29T03:00:01
+b2,grow4471,2026-05-20,5,4100,0,,false,false,2026-05-29T03:00:06
+b3,follow_back_99210,2026-05-20,2,2900,0,,false,false,2026-05-29T03:00:11
+b4,free_likes_55001,2026-05-20,4,5000,0,,false,false,2026-05-29T03:00:17
+b5,promo88210,2026-05-20,6,3800,0,,false,false,2026-05-29T03:00:23
+b6,boost_44521,2026-05-20,3,4500,0,,false,false,2026-05-29T03:00:29
+b7,x_92330771,2026-05-20,5,3300,0,,false,false,2026-05-29T03:00:35
+b8,real_deals_30188,2026-05-20,4,6000,0,,false,false,2026-05-29T03:00:40

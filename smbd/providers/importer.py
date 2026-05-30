@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional
 
 from smbd.providers.base import Provider
-from smbd.schema import Account, Comment
+from smbd.schema import Account, Comment, Follower
 
 
 def _parse_dt(value: Any) -> Optional[datetime]:
@@ -61,12 +61,8 @@ def _parse_bool(value: Any) -> Optional[bool]:
     return str(value).strip().lower() in {"1", "true", "yes", "y", "t"}
 
 
-def _row_to_comment(row: Dict[str, Any], index: int) -> Optional[Comment]:
-    text = row.get("text")
-    if text is None or str(text).strip() == "":
-        return None
-
-    account = Account(
+def _row_to_account(row: Dict[str, Any], index: int) -> Account:
+    return Account(
         id=str(row.get("account_id") or row.get("handle") or f"acct_{index}"),
         handle=row.get("handle") or None,
         display_name=row.get("display_name") or None,
@@ -79,15 +75,28 @@ def _row_to_comment(row: Dict[str, Any], index: int) -> Optional[Comment]:
         is_verified=_parse_bool(row.get("is_verified")),
         external_url=row.get("external_url") or None,
     )
+
+
+def _row_to_comment(row: Dict[str, Any], index: int) -> Optional[Comment]:
+    text = row.get("text")
+    if text is None or str(text).strip() == "":
+        return None
     return Comment(
         id=str(row.get("comment_id") or f"c_{index}"),
-        account=account,
+        account=_row_to_account(row, index),
         text=str(text),
         created_at=_parse_dt(row.get("created_at")),
         likes=_parse_int(row.get("likes")),
         parent_id=row.get("parent_id") or None,
         post_id=row.get("post_id") or None,
         lang=row.get("lang") or None,
+    )
+
+
+def _row_to_follower(row: Dict[str, Any], index: int) -> Follower:
+    return Follower(
+        account=_row_to_account(row, index),
+        followed_at=_parse_dt(row.get("followed_at")),
     )
 
 
@@ -121,3 +130,31 @@ class ImportProvider(Provider):
             if comment is not None:
                 comments.append(comment)
         return comments
+
+    # --- followers ---
+
+    def fetch_followers(self, target: str) -> List[Follower]:
+        """``target`` is a path to a ``.csv`` or ``.json`` file of follower rows.
+
+        Recognized columns/keys (all optional): the same account fields as
+        comments (``account_id``, ``handle``, ``account_created_at``,
+        ``followers_count``, ``following_count``, ``post_count``, ``bio``,
+        ``has_avatar``, ``is_verified``, ``external_url``) plus ``followed_at``.
+        """
+        if target.lower().endswith(".json"):
+            with open(target, "r", encoding="utf-8") as fh:
+                return self.followers_from_json(fh.read())
+        with open(target, "r", encoding="utf-8", newline="") as fh:
+            return self.followers_from_csv(fh.read())
+
+    def followers_from_csv(self, content: str) -> List[Follower]:
+        return self.followers_from_rows(csv.DictReader(io.StringIO(content)))
+
+    def followers_from_json(self, content: str) -> List[Follower]:
+        data = json.loads(content)
+        if isinstance(data, dict):
+            data = data.get("followers", [])
+        return self.followers_from_rows(data)
+
+    def followers_from_rows(self, rows: Iterable[Dict[str, Any]]) -> List[Follower]:
+        return [_row_to_follower(row, i) for i, row in enumerate(rows)]

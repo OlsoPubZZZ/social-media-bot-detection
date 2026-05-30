@@ -18,6 +18,7 @@ language analysis and natural-language explanations.
 | You ask | SMBD returns |
 | --- | --- |
 | Are these comments real? | % genuine / suspicious / spam / coordinated / low-confidence |
+| Are these followers real people? | follower quality score, likely-fake estimate, suspicious join-burst clusters, per-follower evidence (account age, avatar, follow ratio) |
 | Is this page being amplified or attacked? | coordinated groups, repeated-text clusters, timing bursts |
 | Can I trust this page/influencer? | authenticity score (0–100) + confidence band |
 | Why was this flagged? | structured evidence + plain-English narration per item |
@@ -34,10 +35,11 @@ output prettier.
 ## Quick start (no keys needed)
 
 ```bash
-smbd comments examples/sample_comments.csv      # the % breakdown + top flagged
-smbd page     examples/sample_comments.csv      # amplification + authenticity
-smbd explain  examples/sample_comments.csv c6   # why comment c6 was flagged
-smbd comments examples/sample_comments.csv --json   # machine-readable output
+smbd comments  examples/sample_comments.csv      # the % breakdown + top flagged
+smbd followers examples/sample_followers.csv      # follower quality + fake-likely + clusters
+smbd page      examples/sample_comments.csv       # amplification + authenticity
+smbd explain   examples/sample_comments.csv c6    # why comment c6 was flagged
+smbd comments  examples/sample_comments.csv --json   # machine-readable output
 ```
 
 ### As a library
@@ -78,9 +80,41 @@ data → provider adapter → normalized schema → feature extractors
 ```
 
 Detectors in v1: **duplicate/templated text**, **timing bursts**,
-**coordination graph**, **account weakness**, **follow-ratio anomaly**.
+**coordination graph**, **account weakness**, **follow-ratio anomaly**, and
+(for followers) **coordinated join-bursts**.
 Weights and thresholds live in [`smbd/config.py`](smbd/config.py) and can be
 overridden with `--config cfg.json`.
+
+## Analyzing followers
+
+`smbd followers <data>` scores each follower's account and reports a quality
+score, a likely-fake estimate, and suspicious **join-burst clusters** (accounts
+that all started following within a tight window — a hallmark of purchased
+followers):
+
+```bash
+smbd followers examples/sample_followers.csv          # human-readable
+smbd followers examples/sample_followers.csv --json   # machine-readable
+```
+
+Per-follower signals: **new/weak profile** (account age, missing avatar, empty
+bio, no posts, auto-generated handle), **abnormal follow ratio**, and
+**coordinated join-burst** membership. Follower rows accept the same account
+columns as comments, plus `followed_at`.
+
+```python
+from smbd.providers.importer import ImportProvider
+from smbd.followers import analyze_followers
+from smbd.report import followers_report
+
+followers = ImportProvider().fetch_followers("examples/sample_followers.csv")
+print(followers_report(analyze_followers(followers))["summary"])
+```
+
+> **Where does follower data come from?** Instagram's official API does **not**
+> expose individual followers or their profiles (creation date, follower count,
+> avatar). So follower analysis runs on data you legitimately have (export/import)
+> or the optional scraper plugin — not the official Instagram adapter. See below.
 
 ## Optional: LLM enrichment
 
@@ -105,17 +139,33 @@ The engine runs fully without any of this.
 
 - [x] **M1** — core engine, CSV/JSON import, comments + amplification + authenticity, CLI
 - [x] **M2** — optional LLM enrichment (ambiguous-text judgments, richer `explain`)
-- [ ] **M3** — Instagram Graph adapter (owned pages only — see note below)
-- [ ] **M4** — follower analysis + richer coordination graph
-- [ ] **M5** — YouTube & X adapters
+- [x] **M3** — follower analysis engine + Instagram Graph adapter (comments/page metadata)
+- [ ] **M4** — richer coordination graph (community detection) + YouTube adapter
+- [ ] **M5** — X adapter
 - [ ] **M6** — optional scraper extra + web UI
 
 ### A note on Instagram
 
-Instagram's Graph API only exposes comments/followers for pages **you own or
-manage**. Analyzing an arbitrary third-party page through official channels is
-not possible — for those, use the import provider with data you legitimately
-have. The scraper extra (when added) carries ToS/legal risk and is opt-in.
+The official Instagram Graph API only works for accounts **you own or manage**,
+and even then it exposes **comments on your own media** and your account's
+**follower count** — but **never a list of individual followers** or any
+follower's creation date, follower count, or profile photo. Instagram withholds
+follower-level profiles by design.
+
+So `InstagramProvider` ([`smbd/providers/instagram.py`](smbd/providers/instagram.py))
+supports `fetch_comments` and `fetch_page` (counts); `fetch_followers` raises
+with this explanation. To actually analyze follower *quality*, feed
+`smbd.followers.analyze_followers` data you legitimately have via the import
+provider, or (later) the opt-in scraper plugin, which carries ToS/legal risk.
+
+```python
+from smbd.providers.instagram import InstagramProvider
+from smbd.scoring import analyze_comments
+
+ig = InstagramProvider(access_token="...")        # token for an account you manage
+comments = ig.fetch_comments("<your-media-id>")   # comments on your own post
+batch = analyze_comments(comments)
+```
 
 ## License
 

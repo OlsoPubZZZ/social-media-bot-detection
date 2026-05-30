@@ -23,6 +23,7 @@ class Config:
             "account_weakness": 0.7,
             "ratio_anomaly": 0.6,
             "llm_text_judgment": 1.0,
+            "follow_burst": 1.1,
         }
     )
 
@@ -47,6 +48,12 @@ class Config:
 
     # --- coordination ---
     coordination_min_group: int = 3
+
+    # --- follower analysis ---
+    # Mass-follow / purchased-follower bursts happen over minutes-to-hours, not
+    # seconds, so the follow-join window is much wider than the comment burst.
+    follow_burst_window_seconds: int = 3600
+    follow_burst_min_events: int = 5
 
     # --- scoring thresholds (aggregate suspicion in [0, 1]) ---
     genuine_below: float = 0.25
