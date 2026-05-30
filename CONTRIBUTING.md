@@ -1,4 +1,4 @@
-# Contributing to SMBD
+# Contributing to SMBD (Social Media Bot Detection)
 
 Thanks for helping build an open, transparent bot-detection tool. The
 architecture is designed so the two most common contributions — **new data
