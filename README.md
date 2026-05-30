@@ -187,7 +187,6 @@ The engine runs fully without any of this.
 - [x] **M3** — follower analysis engine + Instagram Graph adapter (comments/page metadata)
 - [x] **M4** — YouTube adapter (comments on any public video, optional author enrichment) + richer coordination graph (shared-URL edges, cohesion)
 - [x] **M5** — X adapter (comments + official follower list + page) + optional `[graph]` community detection
-- [ ] **M6** — optional scraper extra + web UI
 
 ### A note on Instagram
 
