@@ -51,3 +51,15 @@ def test_ai_comments_parses_model_json():
 
 def test_ai_comments_handles_unparseable_reply():
     assert BrowserProvider.ai_comments("x", _FakeLLM("the model said no json")) == []
+
+
+def test_login_wall_detected():
+    fb = "Log in\nCreate new account\nForgotten password?\nLog in or sign up to see more"
+    assert BrowserProvider.looks_like_login_wall(fb, title="Facebook") is True
+
+
+def test_normal_page_not_a_login_wall():
+    page = "Great video!\nThis helped me so much\nFirst!\nWhere was this filmed?"
+    assert BrowserProvider.looks_like_login_wall(page, title="Cool Post") is False
+    # A lone "Sign in" button shouldn't trip it.
+    assert BrowserProvider.looks_like_login_wall("Sign in\nawesome content here") is False

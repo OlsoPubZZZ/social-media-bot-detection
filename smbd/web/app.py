@@ -141,6 +141,14 @@ def _browse(req: AnalyzeRequest, llm):
         raise
     except Exception as exc:  # Playwright timeout/navigation errors → friendly message
         raise ValueError(f"Couldn't open that page: {exc}")
+    if cap.get("login_wall"):
+        raise ValueError(
+            "That page is behind a login, so we could only see the public sign-in "
+            "screen — not the real comments or followers. This tool only reads "
+            "public, logged-out content and never logs in. For things behind a "
+            "login (your Facebook friends, an Instagram follower list), export the "
+            "data and use the Comments/Followers tabs, or use the YouTube/X options."
+        )
     comments = (
         BrowserProvider.ai_comments(cap["text"], llm)
         if llm is not None

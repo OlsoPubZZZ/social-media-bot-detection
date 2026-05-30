@@ -71,13 +71,18 @@ class BrowserProvider(Provider):
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=self.headless)
             try:
-                page = browser.new_page(
-                    viewport={"width": self.viewport[0], "height": self.viewport[1]}
+                ctx = browser.new_context(
+                    viewport={"width": self.viewport[0], "height": self.viewport[1]},
+                    locale="en-US",  # consistent English text (better for markers + AI)
+                    extra_http_headers={"Accept-Language": "en-US,en;q=0.9"},
                 )
+                page = ctx.new_page()
                 page.goto(url, wait_until="domcontentloaded", timeout=self.timeout_ms)
                 page.wait_for_timeout(1200)  # let late content settle
                 title = page.title()
                 text = page.inner_text("body")[: self.max_chars]
+                # A password field is a language-agnostic sign of a login wall.
+                has_password = page.query_selector("input[type='password']") is not None
                 shot = page.screenshot(full_page=False)
             finally:
                 browser.close()
@@ -86,6 +91,7 @@ class BrowserProvider(Provider):
             "title": title,
             "text": text,
             "screenshot_b64": base64.b64encode(shot).decode("ascii"),
+            "login_wall": has_password or self.looks_like_login_wall(text, title),
         }
 
     def fetch_comments(self, target: str) -> List[Comment]:
@@ -93,6 +99,21 @@ class BrowserProvider(Provider):
         return self.comments_from_text(self.capture(target)["text"])
 
     # --- text -> comments ---
+
+    #: Phrases that signal a page is a login/auth wall rather than real content.
+    _LOGIN_MARKERS = (
+        "log in", "log into", "login to", "sign in", "create new account",
+        "create account", "forgot password", "forgotten password", "you must log in",
+        "join now", "sign up to", "see more of", "log in or sign up", "create a page",
+    )
+
+    @classmethod
+    def looks_like_login_wall(cls, text: str, title: str = "") -> bool:
+        """True if the rendered page looks like a sign-in screen (so its visible
+        text is auth chrome, not real comments/followers). Requires two distinct
+        markers to avoid tripping on a single 'Sign in' button."""
+        blob = f"{title}\n{text}".lower()
+        return sum(1 for m in cls._LOGIN_MARKERS if m in blob) >= 2
 
     @staticmethod
     def comments_from_text(
