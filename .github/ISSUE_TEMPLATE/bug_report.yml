@@ -1,0 +1,51 @@
+name: Bug report
+description: Something isn't working as documented
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report! Please **never paste API keys, tokens, or real
+        personal data** — use synthetic examples.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what did you get instead?
+      placeholder: "Running `smbd followers data.csv` returned ... but I expected ..."
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The exact command(s), and a small synthetic input if relevant.
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: SMBD version / commit
+      placeholder: "0.5.0 or a commit SHA"
+    validations:
+      required: false
+  - type: input
+    id: python
+    attributes:
+      label: Python version & OS
+      placeholder: "3.11 on macOS 14"
+    validations:
+      required: false
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Data source
+      options:
+        - import (CSV/JSON)
+        - youtube
+        - x
+        - instagram
+        - library / other
+    validations:
+      required: false

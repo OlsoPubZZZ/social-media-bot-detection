@@ -1,0 +1,33 @@
+name: Feature request
+description: Suggest a new detector, provider, or capability
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: The use case or gap you're hitting.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: |
+        If it's a new **detector** or **provider**, see CONTRIBUTING.md — these are
+        designed to be easy and isolated, and PRs are very welcome.
+    validations:
+      required: false
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Type
+      options:
+        - New detector (signal)
+        - New provider (data source)
+        - Scoring / reporting change
+        - CLI / library ergonomics
+        - Docs
+        - Other
+    validations:
+      required: false

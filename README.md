@@ -1,8 +1,8 @@
 # SMBD — Social Media Bot Detection Tool
 
+[![CI](https://github.com/OlsoPubZZZ/social-media-bot-detection/actions/workflows/tests.yml/badge.svg)](https://github.com/OlsoPubZZZ/social-media-bot-detection/actions/workflows/tests.yml)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
-![Tests](https://img.shields.io/badge/tests-82%20passing-brightgreen)
 ![Dependencies](https://img.shields.io/badge/core%20deps-0-success)
 
 **Find out how much of a page's engagement is real.** SMBD analyzes social media
@@ -125,6 +125,8 @@ thresholds are tunable in [`smbd/config.py`](smbd/config.py) — see
 | [Library API](docs/library.md) | Using SMBD from Python |
 | [FAQ & responsible use](docs/faq.md) | Accuracy, false positives, legality, limits |
 | [Contributing](CONTRIBUTING.md) | Add a detector or a data source |
+| [Security policy](SECURITY.md) | Reporting vulnerabilities, secrets handling |
+| [Code of conduct](CODE_OF_CONDUCT.md) | Community standards |
 | [Changelog](CHANGELOG.md) | Release history |
 
 ## Roadmap
