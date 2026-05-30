@@ -1,73 +1,102 @@
 # SMBD — Social Media Bot Detection Tool
 
-Analyze social media engagement — comments, followers, amplification — and find
-out how much is **genuine** vs. **fake / bot / coordinated**, with **evidence for every flag**.
+![License](https://img.shields.io/badge/license-Apache--2.0-blue)
+![Python](https://img.shields.io/badge/python-3.9%2B-blue)
+![Tests](https://img.shields.io/badge/tests-82%20passing-brightgreen)
+![Dependencies](https://img.shields.io/badge/core%20deps-0-success)
 
-The detection engine is **platform-agnostic** and runs with **no credentials**. You feed it data (a CSV/JSON export, an API pull, pasted rows)
-and it returns scored, explained results. An optional AI key adds richer
-language analysis and natural-language explanations.
+**Find out how much of a page's engagement is real.** SMBD analyzes social media
+comments and followers and tells you how much is **genuine** vs.
+**fake / bot / spam / coordinated** — with **evidence for every flag**.
 
-> Detection is **probabilistic**. SMBD reports *signals* and *confidence*, not
-> verdicts. Treat outputs as evidence to review, never as proof that a specific
-> person is a bot.
+It runs with **no credentials** on any data you can export to a CSV/JSON, and
+ships with adapters for **YouTube, X (Twitter), and Instagram**. An optional AI
+key adds richer language analysis.
+
+> Detection is **probabilistic**. SMBD reports *signals* and *confidence bands*,
+> not verdicts. Treat results as evidence to review — never as proof that a
+> specific person is a bot. See [Responsible use](docs/faq.md).
+
+---
 
 ## What it answers
 
 | You ask | SMBD returns |
 | --- | --- |
 | Are these comments real? | % genuine / suspicious / spam / coordinated / low-confidence |
-| Are these followers real people? | follower quality score, likely-fake estimate, suspicious join-burst clusters, per-follower evidence (account age, avatar, follow ratio) |
-| Is this page being amplified or attacked? | coordinated groups, repeated-text clusters, timing bursts |
+| Are these followers real people? | follower quality score, likely-fake %, suspicious join-burst clusters, per-follower evidence |
+| Is this page being amplified or attacked? | coordinated groups, repeated-text clusters, timing bursts, group cohesion |
 | Can I trust this page/influencer? | authenticity score (0–100) + confidence band |
-| Why was this flagged? | structured evidence + plain-English narration per item |
+| Why was this flagged? | structured evidence + plain-English explanation per item |
 
 ## Install
 
 ```bash
-pip install -e ".[cli,dev]"     # editable install with CLI table output + tests
+git clone https://github.com/OlsoPubZZZ/social-media-bot-detection.git
+cd social-media-bot-detection
+pip install -e ".[cli]"      # the engine + pretty CLI tables
 ```
 
-Core has **zero runtime dependencies**; `rich` (the `cli` extra) only makes
-output prettier.
+The core has **zero runtime dependencies**. Optional extras add features:
+`llm` (AI enrichment), `graph` (community detection), `dev` (tests). Full matrix
+in **[docs/installation.md](docs/installation.md)**.
 
-## Quick start (no keys needed)
+## 60-second quickstart (no keys needed)
 
 ```bash
-smbd comments  examples/sample_comments.csv      # the % breakdown + top flagged
-smbd followers examples/sample_followers.csv      # follower quality + fake-likely + clusters
-smbd page      examples/sample_comments.csv       # amplification + authenticity
-smbd explain   examples/sample_comments.csv c6    # why comment c6 was flagged
-smbd comments  examples/sample_comments.csv --json   # machine-readable output
+smbd comments  examples/sample_comments.csv     # % breakdown + top flagged
+smbd followers examples/sample_followers.csv    # follower quality + fake-likely + clusters
+smbd page      examples/sample_comments.csv     # amplification + authenticity
+smbd explain   examples/sample_comments.csv c6  # why comment c6 was flagged
+smbd comments  examples/sample_comments.csv --json   # machine-readable
 ```
 
-### As a library
-
-```python
-from smbd.providers.importer import ImportProvider
-from smbd.scoring import analyze_comments
-from smbd.report import comments_report, amplification_report
-
-comments = ImportProvider().fetch_comments("examples/sample_comments.csv")
-batch = analyze_comments(comments)
-
-print(comments_report(batch)["breakdown_pct"])
-print(amplification_report(batch)["coordinated_groups"])
-```
-
-## Input format
-
-Any CSV/JSON with a `text` column is enough; richer columns unlock more signals.
-Recognized fields (all optional except `text`):
+### What you get
 
 ```
-comment_id, text, created_at, likes, parent_id, post_id, lang,
-account_id, handle, display_name, account_created_at,
-followers_count, following_count, post_count, bio, has_avatar,
-is_verified, external_url
+$ smbd comments examples/sample_comments.csv
+ Are these comments real?
+  genuine           46.7%
+  coordinated       53.3%
+  ...
+15 comments analyzed
+47% of comments look genuine; 53% show signs of spam, coordination, or
+suspicious authorship; 0% lacked enough data to judge.
+
+Top flagged comments:
+  [1.00] coordinated  @grow_fast_77421: Check out my page for free followers...
+  [1.00] coordinated  @boost_now_44521: DM me to grow your account fast 💯💯 link in bio
+  ...
 ```
 
-Detectors **abstain** on missing data rather than guess (no `created_at` → the
-account-age and burst signals simply don't fire for that item).
+```
+$ smbd explain examples/sample_comments.csv c6
+label: coordinated | score: 1.0 | confidence: 1.0
+evidence: duplicate_text, timing_burst, coordination, account_weakness, ratio_anomaly
+"Flagged as coordinated because the same or near-identical text appears across
+many accounts; it was posted inside a synchronized burst of activity; its author
+belongs to a group acting in a coordinated way; the author's profile is new or
+weak; the author follows far more accounts than follow it back."
+```
+
+→ Full walkthrough: **[docs/usage.md](docs/usage.md)** · Reading the output:
+**[docs/output-reference.md](docs/output-reference.md)**
+
+## Platforms at a glance
+
+| Source | Comments | Followers | What you need |
+| --- | --- | --- | --- |
+| **Import** (CSV/JSON) | ✅ | ✅ | nothing — any data you can export |
+| **YouTube** | ✅ any public video | — (API hides subscribers) | free API key |
+| **X (Twitter)** | ✅ replies | ✅ official follower list | paid bearer token |
+| **Instagram** | ✅ your own media | — (API hides followers) | Graph API token (owned account) |
+
+Per-platform setup, API keys, and limits: **[docs/providers.md](docs/providers.md)**.
+
+> **The honest constraint:** getting follower-level data is harder than analyzing
+> it. Instagram and YouTube don't expose follower profiles via their APIs; X
+> does. For everything else, the engine runs on data you export or import — which
+> is exactly why it's platform-agnostic.
 
 ## How it works
 
@@ -77,141 +106,40 @@ data → provider adapter → normalized schema → feature extractors
                                                   ↘ optional LLM enrichment
 ```
 
-Detectors in v1: **duplicate/templated text**, **timing bursts**,
-**coordination graph** (shared text / timing / URL edges, with a per-group
-cohesion score), **account weakness**, **follow-ratio anomaly**, and (for
-followers) **coordinated join-bursts**.
-Weights and thresholds live in [`smbd/config.py`](smbd/config.py) and can be
-overridden with `--config cfg.json`.
+Signals: **duplicate/templated text**, **timing bursts**, **coordination graph**
+(shared text / timing / URL edges + cohesion + optional community detection),
+**account weakness** (age, avatar, bio, handle), **follow-ratio anomaly**, and
+**coordinated follower join-bursts**. Each emits structured evidence; weights and
+thresholds are tunable in [`smbd/config.py`](smbd/config.py) — see
+**[docs/configuration.md](docs/configuration.md)**.
 
-## Analyzing followers
+## Documentation
 
-`smbd followers <data>` scores each follower's account and reports a quality
-score, a likely-fake estimate, and suspicious **join-burst clusters** (accounts
-that all started following within a tight window — a hallmark of purchased
-followers):
-
-```bash
-smbd followers examples/sample_followers.csv          # human-readable
-smbd followers examples/sample_followers.csv --json   # machine-readable
-```
-
-Per-follower signals: **new/weak profile** (account age, missing avatar, empty
-bio, no posts, auto-generated handle), **abnormal follow ratio**, and
-**coordinated join-burst** membership. Follower rows accept the same account
-columns as comments, plus `followed_at`.
-
-```python
-from smbd.providers.importer import ImportProvider
-from smbd.followers import analyze_followers
-from smbd.report import followers_report
-
-followers = ImportProvider().fetch_followers("examples/sample_followers.csv")
-print(followers_report(analyze_followers(followers))["summary"])
-```
-
-> **Where does follower data come from?** Instagram's official API does **not**
-> expose individual followers or their profiles (creation date, follower count,
-> avatar). So follower analysis runs on data you legitimately have (export/import)
-> or the optional scraper plugin — not the official Instagram adapter. See below.
-
-## Analyzing a YouTube video (official API)
-
-Unlike Instagram, YouTube's Data API returns **public comments on any public
-video**, so this works on third-party content. Get an API key from the Google
-Cloud console, then:
-
-```bash
-export YOUTUBE_API_KEY=AIza...
-smbd comments <video_id> --provider youtube                    # comments on any public video
-smbd comments <video_id> --provider youtube --enrich-authors   # + commenter channel age/subs
-smbd page     <channel_id> --provider youtube                  # channel metadata
-```
-
-`--enrich-authors` makes a second batched call to fetch each commenter's
-**channel creation date, subscriber count, and video count**, which lets the
-account-age and profile-weakness detectors fire on YouTube data.
-
-> **Subscribers:** YouTube's API does not expose a channel's subscriber
-> identities (only the authorized user's own subscriptions, with consent), so
-> follower-quality analysis again relies on imported data.
-
-## Analyzing X (Twitter)
-
-X's API is **paid** and rate-limited, but it is the **only** platform whose API
-returns a real **follower list with profiles** — so it's the one source that can
-feed the follower engine officially. Set a bearer token, then:
-
-```bash
-export X_BEARER_TOKEN=AAAA...
-smbd comments  <tweet_id> --provider x       # replies in a conversation
-smbd followers <user_id>  --provider x       # follower quality on official data
-smbd page      <user_id>  --provider x       # account metadata
-```
-
-> X's followers endpoint gives **no "followed at" timestamp**, so the join-burst
-> detector abstains on X follower data — profile-weakness and follow-ratio
-> signals still fire.
-
-## Community detection (optional)
-
-Large coordinated groups can contain several distinct rings bridged together.
-With the optional `[graph]` extra installed (`pip install -e ".[graph]"`), the
-coordination detector splits big groups into communities via networkx modularity
-and reports a `subcommunity_count`. Without it, communities fall back to
-connected components (stdlib) — the core stays dependency-free.
-
-## Optional: LLM enrichment
-
-Install the extra and set a key, then add `--llm` to any command:
-
-```bash
-pip install -e ".[cli,llm]"
-export ANTHROPIC_API_KEY=sk-ant-...
-smbd comments examples/sample_comments.csv --llm
-smbd comments examples/sample_comments.csv --llm --llm-model claude-haiku-4-5   # cheaper
-smbd explain  examples/sample_comments.csv c6 --llm                            # LLM-narrated evidence
-```
-
-Only **ambiguous** comments (borderline scores / low-confidence / suspicious) are
-sent to the model, in one batched, prompt-cached call — clear-genuine and
-clear-spam comments never are, so cost stays low. The judgment becomes an
-`llm_text_judgment` signal and the comment is re-scored. The default model is
-`claude-opus-4-8`; `--llm-model claude-haiku-4-5` is far cheaper for this task.
-The engine runs fully without any of this.
+| Guide | What's in it |
+| --- | --- |
+| [Installation](docs/installation.md) | Python versions, extras matrix, troubleshooting |
+| [Usage guide](docs/usage.md) | Every command, flags, input formats, examples |
+| [Providers & API keys](docs/providers.md) | YouTube / X / Instagram setup, limits, gotchas |
+| [Output reference](docs/output-reference.md) | Labels, scores, confidence, every JSON field |
+| [Configuration](docs/configuration.md) | Tuning weights and thresholds |
+| [Library API](docs/library.md) | Using SMBD from Python |
+| [FAQ & responsible use](docs/faq.md) | Accuracy, false positives, legality, limits |
+| [Contributing](CONTRIBUTING.md) | Add a detector or a data source |
+| [Changelog](CHANGELOG.md) | Release history |
 
 ## Roadmap
 
-- [x] **M1** — core engine, CSV/JSON import, comments + amplification + authenticity, CLI
-- [x] **M2** — optional LLM enrichment (ambiguous-text judgments, richer `explain`)
-- [x] **M3** — follower analysis engine + Instagram Graph adapter (comments/page metadata)
-- [x] **M4** — YouTube adapter (comments on any public video, optional author enrichment) + richer coordination graph (shared-URL edges, cohesion)
-- [x] **M5** — X adapter (comments + official follower list + page) + optional `[graph]` community detection
+- [x] **M1–M5** — core engine, comments/followers/amplification/authenticity,
+  LLM enrichment, Instagram + YouTube + X adapters, community detection
 
-### A note on Instagram
+## Responsible use
 
-The official Instagram Graph API only works for accounts **you own or manage**,
-and even then it exposes **comments on your own media** and your account's
-**follower count** — but **never a list of individual followers** or any
-follower's creation date, follower count, or profile photo. Instagram withholds
-follower-level profiles by design.
-
-So `InstagramProvider` ([`smbd/providers/instagram.py`](smbd/providers/instagram.py))
-supports `fetch_comments` and `fetch_page` (counts); `fetch_followers` raises
-with this explanation. To actually analyze follower *quality*, feed
-`smbd.followers.analyze_followers` data you legitimately have via the import
-provider, or (later) the opt-in scraper plugin, which carries ToS/legal risk.
-
-```python
-from smbd.providers.instagram import InstagramProvider
-from smbd.scoring import analyze_comments
-
-ig = InstagramProvider(access_token="...")        # token for an account you manage
-comments = ig.fetch_comments("<your-media-id>")   # comments on your own post
-batch = analyze_comments(comments)
-```
+SMBD is a **transparency tool**. Outputs are probabilistic signals with
+confidence bands, not accusations. Official adapters only access data you're
+authorized for; any scraping lives behind a clearly-marked opt-in extra. Don't
+use SMBD to harass, deplatform, or make automated decisions about individuals.
+See **[docs/faq.md](docs/faq.md)**.
 
 ## License
 
-Apache-2.0. See [LICENSE](LICENSE). Contributions welcome — see
-[CONTRIBUTING.md](CONTRIBUTING.md).
+[Apache-2.0](LICENSE). Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
