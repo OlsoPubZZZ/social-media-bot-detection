@@ -54,6 +54,33 @@ def test_coordination_ignores_genuine(genuine_comments):
     assert CoordinationDetector(DEFAULT_CONFIG).analyze(genuine_comments) == {}
 
 
+def test_coordination_links_accounts_sharing_a_url():
+    # Three accounts, deliberately different wording, but the same link.
+    from smbd.schema import Account, Comment
+
+    texts = [
+        "honestly the best thing I have seen all year, go look",
+        "wow this completely changed how I think about everything today",
+        "my cousin showed me this last night and now I cannot stop",
+    ]
+    comments = [
+        Comment(id=f"c{i}", account=Account(id=f"u{i}", handle=f"acc{i}"),
+                text=f"{t} http://promo.example/deal")
+        for i, t in enumerate(texts)
+    ]
+    produced = CoordinationDetector(DEFAULT_CONFIG).analyze(comments)
+    assert produced
+    sig = _all_signals(produced)[0]
+    assert "shared_url" in sig.evidence["link_types"]
+    assert sig.evidence["group_size"] == 3
+
+
+def test_coordination_reports_cohesion(bot_ring):
+    sig = _all_signals(CoordinationDetector(DEFAULT_CONFIG).analyze(bot_ring))[0]
+    assert "cohesion" in sig.evidence
+    assert 0.0 <= sig.evidence["cohesion"] <= 1.0
+
+
 def test_account_weakness_flags_new_generated_profiles(bot_ring):
     produced = AccountWeaknessDetector(DEFAULT_CONFIG).analyze(bot_ring)
     assert len(produced) == len(bot_ring)

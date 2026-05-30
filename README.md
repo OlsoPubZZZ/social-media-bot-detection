@@ -80,8 +80,9 @@ data → provider adapter → normalized schema → feature extractors
 ```
 
 Detectors in v1: **duplicate/templated text**, **timing bursts**,
-**coordination graph**, **account weakness**, **follow-ratio anomaly**, and
-(for followers) **coordinated join-bursts**.
+**coordination graph** (shared text / timing / URL edges, with a per-group
+cohesion score), **account weakness**, **follow-ratio anomaly**, and (for
+followers) **coordinated join-bursts**.
 Weights and thresholds live in [`smbd/config.py`](smbd/config.py) and can be
 overridden with `--config cfg.json`.
 
@@ -116,6 +117,27 @@ print(followers_report(analyze_followers(followers))["summary"])
 > avatar). So follower analysis runs on data you legitimately have (export/import)
 > or the optional scraper plugin — not the official Instagram adapter. See below.
 
+## Analyzing a YouTube video (official API)
+
+Unlike Instagram, YouTube's Data API returns **public comments on any public
+video**, so this works on third-party content. Get an API key from the Google
+Cloud console, then:
+
+```bash
+export YOUTUBE_API_KEY=AIza...
+smbd comments <video_id> --provider youtube                    # comments on any public video
+smbd comments <video_id> --provider youtube --enrich-authors   # + commenter channel age/subs
+smbd page     <channel_id> --provider youtube                  # channel metadata
+```
+
+`--enrich-authors` makes a second batched call to fetch each commenter's
+**channel creation date, subscriber count, and video count**, which lets the
+account-age and profile-weakness detectors fire on YouTube data.
+
+> **Subscribers:** YouTube's API does not expose a channel's subscriber
+> identities (only the authorized user's own subscriptions, with consent), so
+> follower-quality analysis again relies on imported data.
+
 ## Optional: LLM enrichment
 
 Install the extra and set a key, then add `--llm` to any command:
@@ -140,8 +162,8 @@ The engine runs fully without any of this.
 - [x] **M1** — core engine, CSV/JSON import, comments + amplification + authenticity, CLI
 - [x] **M2** — optional LLM enrichment (ambiguous-text judgments, richer `explain`)
 - [x] **M3** — follower analysis engine + Instagram Graph adapter (comments/page metadata)
-- [ ] **M4** — richer coordination graph (community detection) + YouTube adapter
-- [ ] **M5** — X adapter
+- [x] **M4** — YouTube adapter (comments on any public video, optional author enrichment) + richer coordination graph (shared-URL edges, cohesion)
+- [ ] **M5** — X adapter; graph-library community detection (optional `[graph]` extra)
 - [ ] **M6** — optional scraper extra + web UI
 
 ### A note on Instagram

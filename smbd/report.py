@@ -105,6 +105,7 @@ def amplification_report(batch: BatchResult) -> Dict:
     """Coordination groups, repeated-text clusters, and timing bursts."""
     groups: Dict[str, set] = defaultdict(set)
     link_types: Dict[str, set] = defaultdict(set)
+    cohesions: Dict[str, float] = defaultdict(float)
     text_clusters: List[Dict] = []
     seen_text_samples = set()
     bursts: List[Dict] = []
@@ -115,6 +116,7 @@ def amplification_report(batch: BatchResult) -> Dict:
                 key = tuple(sorted(s.evidence.get("group_account_ids", [])))
                 groups[key].update(s.evidence.get("group_account_ids", []))
                 link_types[key].update(s.evidence.get("link_types", []))
+                cohesions[key] = max(cohesions[key], s.evidence.get("cohesion", 0.0) or 0.0)
             elif s.name == "duplicate_text":
                 sample = s.evidence.get("sample_text")
                 if sample and sample not in seen_text_samples:
@@ -136,7 +138,12 @@ def amplification_report(batch: BatchResult) -> Dict:
                 )
 
     coordinated_groups = [
-        {"account_ids": sorted(accts), "size": len(accts), "link_types": sorted(link_types[key])}
+        {
+            "account_ids": sorted(accts),
+            "size": len(accts),
+            "link_types": sorted(link_types[key]),
+            "cohesion": cohesions[key],
+        }
         for key, accts in groups.items()
     ]
     # Deduplicate bursts by window.

@@ -33,6 +33,21 @@ def url_count(text: str) -> int:
     return len(_URL_RE.findall(text))
 
 
+def extract_urls(text: str) -> List[str]:
+    """Normalized URLs found in ``text`` (lowercased, trailing punctuation stripped).
+
+    Used to link accounts posting the *same* link even when the surrounding
+    wording differs — a common link-spam-ring pattern that near-duplicate text
+    matching alone misses.
+    """
+    urls: List[str] = []
+    for match in _URL_RE.findall(text or ""):
+        url = match.lower().strip("(").rstrip(".,!?;:)\"'")
+        if url:
+            urls.append(url)
+    return urls
+
+
 def emoji_ratio(text: str) -> float:
     """Share of characters that are emoji/symbol (rough, stdlib-only)."""
     if not text:

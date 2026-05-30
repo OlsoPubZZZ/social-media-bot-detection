@@ -69,10 +69,27 @@ def _build_llm(args, config: Config) -> Optional[LLMClient]:
         sys.exit(2)
 
 
-def _load(path: str, config: Config, llm: Optional[LLMClient] = None) -> BatchResult:
-    comments = ImportProvider().fetch_comments(path)
+def _provider(args):
+    """Build the ingestion provider named by --provider (default: file import)."""
+    if getattr(args, "provider", "import") == "youtube":
+        from smbd.providers.youtube import YouTubeProvider
+
+        return YouTubeProvider(
+            api_key=getattr(args, "api_key", None),
+            enrich_authors=getattr(args, "enrich_authors", False),
+        )
+    return ImportProvider()
+
+
+def _load(target: str, config: Config, llm: Optional[LLMClient] = None, provider=None) -> BatchResult:
+    provider = provider or ImportProvider()
+    try:
+        comments = provider.fetch_comments(target)
+    except (RuntimeError, NotImplementedError) as exc:
+        _err(str(exc))
+        sys.exit(2)
     if not comments:
-        _err(f"No comments found in {path!r} (need at least a 'text' column/field).")
+        _err(f"No comments found for {target!r}.")
         sys.exit(2)
     batch = analyze_comments(comments, config=config)
     if llm is not None:
@@ -138,7 +155,7 @@ def _print_flagged(batch: BatchResult, limit: int = 10) -> None:
 
 def cmd_comments(args) -> int:
     cfg = _config(args)
-    batch = _load(args.data, cfg, _build_llm(args, cfg))
+    batch = _load(args.data, cfg, _build_llm(args, cfg), _provider(args))
     if args.json:
         _print_json({**comments_report(batch), "results": [r.to_dict() for r in batch.results]})
     else:
@@ -222,7 +239,7 @@ def _print_followers(rep: dict) -> None:
 
 def cmd_page(args) -> int:
     cfg = _config(args)
-    batch = _load(args.data, cfg, _build_llm(args, cfg))
+    batch = _load(args.data, cfg, _build_llm(args, cfg), _provider(args))
     amp = amplification_report(batch)
     auth = authenticity_report(batch)
     if args.json:
@@ -248,7 +265,7 @@ def cmd_page(args) -> int:
 def cmd_explain(args) -> int:
     cfg = _config(args)
     llm = _build_llm(args, cfg)
-    batch = _load(args.data, cfg, llm)
+    batch = _load(args.data, cfg, llm, _provider(args))
     match = next((r for r in batch.results if r.comment.id == args.comment_id), None)
     if match is None:
         _err(f"comment id {args.comment_id!r} not found")
@@ -259,6 +276,18 @@ def cmd_explain(args) -> int:
 
 def _add_common(sp: argparse.ArgumentParser) -> None:
     sp.add_argument("--config", help="JSON config overriding detection weights/thresholds")
+    sp.add_argument(
+        "--provider",
+        choices=["import", "youtube"],
+        default="import",
+        help="data source (default: import from file). 'youtube' treats the argument as a video id.",
+    )
+    sp.add_argument("--api-key", help="API key for online providers (or set YOUTUBE_API_KEY)")
+    sp.add_argument(
+        "--enrich-authors",
+        action="store_true",
+        help="(youtube) fetch each commenter's channel age + subscriber/video counts",
+    )
     sp.add_argument(
         "--llm",
         action="store_true",
