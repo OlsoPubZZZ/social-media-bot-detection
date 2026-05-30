@@ -29,6 +29,23 @@ key adds richer language analysis.
 | Can I trust this page/influencer? | authenticity score (0–100) + confidence band |
 | Why was this flagged? | structured evidence + plain-English explanation per item |
 
+## Screenshots
+
+The friendly web app (`smbd serve`) tells you, in plain English, how much of an
+account's engagement is real:
+
+<p align="center">
+  <img src="docs/screenshots/web-comments.png" width="49%" alt="Web UI — are these comments real?" />
+  <img src="docs/screenshots/web-followers.png" width="49%" alt="Web UI — are these followers real?" />
+</p>
+
+…and the same engine runs on the command line, with evidence for every flag:
+
+<p align="center">
+  <img src="docs/screenshots/cli-comments.png" width="49%" alt="CLI — comments breakdown" />
+  <img src="docs/screenshots/cli-explain.png" width="49%" alt="CLI — why a comment was flagged" />
+</p>
+
 ## Install
 
 ```bash
