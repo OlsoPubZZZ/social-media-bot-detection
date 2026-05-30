@@ -73,6 +73,20 @@ Per-follower signals: **new/weak profile** (account age, missing avatar, empty
 bio, no posts, auto-generated handle), **abnormal follow ratio**, and
 **coordinated join-burst** membership.
 
+**Analyze your own Instagram/Facebook network:** download your data from the
+platform (*Settings → Download Your Information* → **JSON**) and pass the file
+straight in — SMBD auto-detects the export format:
+
+```bash
+smbd followers ~/instagram_export/followers_1.json   # or facebook friends.json
+```
+
+Instagram exports include the **time you were followed**, so coordinated
+bought-follower bursts show up. (Exports don't include each follower's age,
+avatar, or counts — Meta doesn't provide those — so only the handle-pattern and
+join-burst signals fire. There's no legitimate way to get a *third party's*
+follower list; see [providers.md](providers.md).)
+
 **Flags:** `--json`, `--config`, `--provider {import,x}`, `--api-key`.
 
 ## `smbd page`
@@ -141,11 +155,16 @@ is_verified, external_url
 The same account fields as above, plus `followed_at` (when they started
 following — enables join-burst detection).
 
+Alternatively, feed a **Facebook/Instagram "Download Your Information" JSON**
+file as-is — SMBD recognizes the Instagram (`relationships_followers` /
+`relationships_following`) and Facebook (`friends_v2` / `followers_v2`) shapes
+and maps each entry's handle/name + follow timestamp automatically.
+
 ### Formats and parsing
 
 - **CSV:** a header row with any subset of the names above.
-- **JSON:** either a top-level array of objects, or an object with a
-  `"comments"` / `"followers"` key holding the array.
+- **JSON:** a top-level array of objects, an object with a `"comments"` /
+  `"followers"` key, **or** a Facebook/Instagram export file (auto-detected).
 - **Timestamps** (`created_at`, `account_created_at`, `followed_at`): ISO-8601
   (`2026-05-01T12:00:00`, trailing `Z` ok) or epoch seconds.
 - **Booleans** (`has_avatar`, `is_verified`): `true/false`, `1/0`, `yes/no`.

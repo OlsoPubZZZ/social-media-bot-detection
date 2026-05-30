@@ -122,6 +122,7 @@ Details: **[docs/web.md](docs/web.md)**.
 | Source | Comments | Followers | What you need |
 | --- | --- | --- | --- |
 | **Import** (CSV/JSON) | ✅ | ✅ | nothing — any data you can export |
+| **Facebook / Instagram export** | — | ✅ your own (drop in the JSON) | the official "Download Your Information" file |
 | **YouTube** | ✅ any public video | — (API hides subscribers) | free API key |
 | **X (Twitter)** | ✅ replies | ✅ official follower list | paid bearer token |
 | **Instagram** | ✅ your own media | — (API hides followers) | Graph API token (owned account) |
@@ -129,9 +130,13 @@ Details: **[docs/web.md](docs/web.md)**.
 Per-platform setup, API keys, and limits: **[docs/providers.md](docs/providers.md)**.
 
 > **The honest constraint:** getting follower-level data is harder than analyzing
-> it. Instagram and YouTube don't expose follower profiles via their APIs; X
-> does. For everything else, the engine runs on data you export or import — which
-> is exactly why it's platform-agnostic.
+> it. Instagram, Facebook, and YouTube don't expose follower profiles via their
+> APIs — and there's **no legitimate way to get a *third party's* follower list**.
+> To analyze your *own* network, download your data from Facebook/Instagram
+> (*Settings → Download Your Information*, JSON) and drop the file into the
+> Followers tab — SMBD reads it directly. X is the one API that returns full
+> follower profiles. This platform reality is exactly why the engine is
+> decoupled from ingestion.
 
 ## How it works
 
